@@ -15,39 +15,23 @@ public class PrintBill
 {
     public PrintBill(PrintingQueue data, string type)
     {
-        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
-
-        //Dictionary<string, JsonElement> json = GenerateMockBillData();
-        //List<Dictionary<string, object>> result = ParseData(json);
-        //string resultJson = System.Text.Json.JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
-        //WriteFile(resultJson);
-
-        //var l = result.Count;
-
-        //var receipt = result[0].receipt;
-        foreach (Printer printer in data.printers)
-        {
-            if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            ////ToDo for each receipts
-            ////ToDo new modelfor one receipt
-            BillModel bill = GenerateMockBillData();
-            //var result = ParseData(bill);
-
-            //Dictionary<string, JsonElement> json = GenerateMockBillData();
-            //MessageBox.Show("nhnghnjgyjn");
-            //List<BillModel> result = ParseData(json);
-            //MessageBox.Show($"lenght {result.Count}");
-            if (type == "bill")
-            {
-                PrintingBill(ptr, bill, type);
-            }
-            else if (type == "receipt")
-            {
-                PrintingReceipt(ptr, bill, type);
-            }
-        }
+        //foreach (Printer printer in data.printers)
+        //{
+        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
+        //    IntPtr ptr = await PM.GetPrinterConnection(printer.ip_address);
+        //    BillModel bill = GenerateMockBillData();
+        //    if (type == "bill")
+        //    {
+        //        PrintingBill(ptr, bill, type);
+        //    }
+        //    else if (type == "receipt")
+        //    {
+        //        PrintingReceipt(ptr, bill, type);
+        //    }
+        //}
     }
+
+
 
     public async void PrintingBill(IntPtr printer, BillModel bill, string type)
     {

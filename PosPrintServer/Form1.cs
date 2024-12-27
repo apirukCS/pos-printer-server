@@ -124,19 +124,21 @@ namespace PosPrintServer
             }
         }
 
-        public static void KitchenPrint(PrintingQueue item)
+        static async Task KitchenPrint(PrintingQueue item)
         {
             //MessageBox.Show("test");
-            var printer = new PrintKitchen(item);
+            var printer = await PrintKitchen.Create(item);
+            //var printer = new PrintKitchen(item);
             GC.KeepAlive(printer);
         }
 
-        static void QrCodePrint(PrintingQueue item)
+        static async Task QrCodePrint(PrintingQueue item)
         {
             //MessageBox.Show("qr code print");
             //Thread.Sleep(100);
-            var qrCode = new PrintQRCode(item);
-            GC.KeepAlive(qrCode);
+            //var qrCode = new PrintQRCode(item);
+            var p = await PrintQRCode.Create(item);
+            GC.KeepAlive(p);
         }
 
         static void PrebillPrint(PrintingQueue item)
@@ -180,7 +182,7 @@ namespace PosPrintServer
             GetPrinters();
         }
 
-        private void DisplayPrinters(List<PrinterModel>? data)
+        private async void DisplayPrinters(List<PrinterModel>? data)
         {
             label1.Font = new Font("Arial", 11);
             label1.Text = "";
@@ -193,16 +195,15 @@ namespace PosPrintServer
 
             foreach (var printer in data)
             {
-                //if (printer.ip_address == "192.168.1.70")
-                //{
-                    label1.Text += $"{printer.ip_address}   สถานะ: {CheckPrinterStatus(printer.ip_address)} \n\n";
-            //}
+                if (!string.IsNullOrEmpty(printer.ip_address)) {
+                    label1.Text += $"{printer.ip_address}   สถานะ: {await CheckPrinterStatus(printer.ip_address)} \n\n";
+                }
         }
             label2.Text = "";
         }
 
-        private string CheckPrinterStatus(string ip) {
-            IntPtr ptr = PM.GetPrinterConnection(ip);
+        private async Task<string> CheckPrinterStatus(string ip) {
+            IntPtr ptr = await PM.GetPrinterConnection(ip);
             var res=  PM.GetPrinterStatus(ptr, 2);
             //MessageBox.Show($"res {res}");
             return res;

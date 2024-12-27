@@ -8,28 +8,53 @@ public class PrinterManager
 {
     private static ConcurrentDictionary<string, IntPtr> connectedPrinters = new ConcurrentDictionary<string, IntPtr>();
 
-    public static IntPtr GetPrinterConnection(string ipAddress)
+    public static async Task<IntPtr> GetPrinterConnection(string ipAddress)
     {
-        IntPtr printer = ESCPOS.InitPrinter("");
-        int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-        connectedPrinters[ipAddress] = printer;
-        return printer;
+        //IntPtr printer = ESCPOS.InitPrinter("");
+        //int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        ////connectedPrinters[ipAddress] = printer;
+        //WriteLog.Write($"s:{s}");
+        //if (s != 0) {
+        //    await Task.Delay(200);
+        //    s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //    WriteLog.Write($"s2:{s}");
 
-        //if (connectedPrinters.ContainsKey(ipAddress))
-        //{
-        //    return connectedPrinters[ipAddress];
+        //    if (s != 0)
+        //    {
+        //        await Task.Delay(200);
+        //        s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //        WriteLog.Write($"s3:{s}");
+
+        //        if (s != 0)
+        //        {
+        //            await Task.Delay(200);
+        //            s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //            WriteLog.Write($"s4:{s}");
+        //        }
+        //    }
         //}
-        //else
-        //{
-        //    IntPtr printer = ESCPOS.InitPrinter("");
-        //    int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-        //    connectedPrinters[ipAddress] = printer;
-        //    return printer;
-        //}
+        //return printer;
+
+        if (connectedPrinters.ContainsKey(ipAddress))
+        {
+            return connectedPrinters[ipAddress];
+        }
+        else
+        {
+            IntPtr printer = ESCPOS.InitPrinter("");
+            int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+            connectedPrinters[ipAddress] = printer;
+            return printer;
+        }
     }
 
     public static void ClosePort(IntPtr printer) {
         ESCPOS.ClosePort(printer);
+    }
+
+    public static void PrintSymbol(IntPtr printer, string url) {
+        ESCPOS.PrintSymbol(printer,49,url,48, 10, 10, 1);
+        NewLine(printer);
     }
 
     public static string GetPrinterStatus(IntPtr printer,int status) {
