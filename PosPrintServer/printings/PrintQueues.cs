@@ -8,36 +8,29 @@ using PM = PrinterManager;
 public class PrintQueue
 {
     public PrintQueue(PrintingQueue data) {
-        //MessageBox.Show($"data {data}");
-        //foreach (Printer printer in data.printers)
-        //{
-        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
-        //    IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-        //    Print(ptr, data);
-        //}
-        IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
-        Print(ptr, data);
+        MessageBox.Show($"data {data}");
+        foreach (Printer printer in data.printers)
+        {
+            if (string.IsNullOrEmpty(printer.ip_address)) continue;
+            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+            MessageBox.Show($"data {data}");
+            Print(ptr, data);
+        }
+        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
+        //Print(ptr, data);
     }
 
     public async void Print(IntPtr printer, PrintingQueue data)
     {
-        //MessageBox.Show($"call print qqqqq");
         string mockupJson = QueueModel.CreateMockupData();
         QueueModel q = QueueModel.FromJson(mockupJson);
-        //MessageBox.Show($"call print weq {q}");
         DateTimeHelper dateTimeHelper = new DateTimeHelper();
-        //MessageBox.Show($"call print dateTimeHelper {dateTimeHelper}");
 
         string imageUrl = q.ShopQ?.ImageUrl ?? "";
-        //MessageBox.Show($"call print imageUrl {imageUrl}");
         string date = q.CrrentDate ?? dateTimeHelper.GetCurrentDate("th");
-        //MessageBox.Show($"call print date {date}");
         int qNo = q.Queue?.QueueNo ?? 0;
-        //MessageBox.Show($"call print qNo {qNo}");
         int customerAmount = q.Queue?.CustomerAmount ?? 0;
-        //MessageBox.Show($"call print customerAmount {customerAmount}");
         int waitQCount = q.Queue?.WaitQueueCount ?? 0;
-        //MessageBox.Show($"call print q {waitQCount} {date} {qNo} {customerAmount}");
 
         PM.AlignCenter(printer);
         await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
@@ -50,6 +43,25 @@ public class PrintQueue
         PM.NewLine(printer);
         PM.PrintTextBold(printer, date);
         PM.CutPaper(printer);
-        //MessageBox.Show("end");
+    }
+
+    static void WriteFile(string jsonString)
+    {
+        string folderPath = @"C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows";
+        string filePath = Path.Combine(folderPath, "json_log.txt");
+        try
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            File.WriteAllText(filePath, jsonString);
+            //MessageBox.Show($"JSON has been written to: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            //MessageBox.Show($"Error writing to file: {ex.Message}");
+        }
     }
 }

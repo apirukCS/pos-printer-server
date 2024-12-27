@@ -16,33 +16,57 @@ public class PrintKitchen
 {
     public PrintKitchen(PrintingQueue data)
     {
-        IntPtr ptr = PM.GetPrinterConnection("192.168.1.70");
-        KitchenModel model = GetMockupData();
-        Print(ptr, model);
-        //foreach (Printer printer in data.printers)
-        //{
-        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
-        //    IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-        //    KitchenModel model = GetMockupData();
-        //    Print(ptr, model);
-        //}
+        InitializePrinting(data).Wait();
     }
 
-    public void Print(IntPtr printer, KitchenModel data)
+    private async Task InitializePrinting(PrintingQueue data)
     {
-        MessageBox.Show("call printing kitchen");
-        PM.AlignCenter(printer);
-        AddKitchenTitle(printer, data);
-        PM.TextAlignLeft(printer);
-        AddOrderTime(printer, data);
-        AddTable(printer, data);
-        AddBuffet(printer, data);
-        AddBillNo(printer, data);
-        AddStaff(printer, data);
-        PM.DrawLine(printer);
-        AddBillItems(printer, data);
-        PM.CutPaper(printer);
+        foreach (Printer printer in data.printers)
+        {
+            if (string.IsNullOrEmpty(printer.ip_address)) continue;
+            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+            //MessageBox.Show("testest");
+            KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(data.jsonData);
+            await Print(ptr, model);
+            await Task.Delay(500);
+        }
     }
+
+    public async Task Print(IntPtr printer, KitchenModel data)
+    {
+        await Task.Run(() =>
+        {
+            PM.AlignCenter(printer);
+            AddKitchenTitle(printer, data);
+            PM.TextAlignLeft(printer);
+            AddOrderTime(printer, data);
+            AddTable(printer, data);
+            AddBuffet(printer, data);
+            AddBillNo(printer, data);
+            AddStaff(printer, data);
+            PM.DrawLine(printer);
+            AddBillItems(printer, data);
+            PM.CutPaper(printer);
+            PM.ClosePort(printer);
+        });
+    }
+
+    //public void Print(IntPtr printer, KitchenModel data)
+    //{
+    //    //MessageBox.Show("call printing kitchen");
+    //    PM.AlignCenter(printer);
+    //    AddKitchenTitle(printer, data);
+    //    PM.TextAlignLeft(printer);
+    //    AddOrderTime(printer, data);
+    //    AddTable(printer, data);
+    //    AddBuffet(printer, data);
+    //    AddBillNo(printer, data);
+    //    AddStaff(printer, data);
+    //    PM.DrawLine(printer);
+    //    AddBillItems(printer, data);
+    //    PM.CutPaper(printer);
+    //    PM.ClosePort(printer);
+    //}
 
     static void AddKitchenTitle(IntPtr printer, KitchenModel data)
     {
@@ -217,7 +241,6 @@ public class PrintKitchen
         return amount.ToString("0.###", CultureInfo.InvariantCulture);
     }
 
-    //test
     public KitchenModel GetMockupData()
     {
         // JSON data
@@ -623,7 +646,7 @@ public class PrintKitchen
 
     static void Test(IntPtr printer, PrintingQueue d)
     {
-        MessageBox.Show("เวลาเริ่ม");
+        //MessageBox.Show("เวลาเริ่ม");
         string text = "เวลาเริ่ม";
         byte[] sizeCommand24 = new byte[] { 0x1B, 0x58, 0x00, 0x18, 0x00 }; // nL = 24, nH = 0
         ESCPOS.WriteData(printer, sizeCommand24, sizeCommand24.Length);
@@ -641,7 +664,7 @@ public class PrintKitchen
 
     public static void GenerateAndSaveReceiptLineBitmap()
     {
-        MessageBox.Show("gen sdhkjsnkedc");
+        //MessageBox.Show("gen sdhkjsnkedc");
         // ขนาดของภาพ Bitmap (ปรับขนาดตามเครื่องพิมพ์ของคุณ)
         int width = 580; // กว้างของเครื่องพิมพ์
         int height = 50; // ความสูงตามที่ต้องการ
@@ -684,7 +707,7 @@ public class PrintKitchen
 
     public static void PrintTextCompressed(IntPtr printer, string text)
     {
-        MessageBox.Show("atvvbvbvbdfgwd");
+        //MessageBox.Show("atvvbvbvbdfgwd");
 
         PM.SetTextSize(printer,5);
 

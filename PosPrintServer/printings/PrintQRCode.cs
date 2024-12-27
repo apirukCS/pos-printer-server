@@ -7,7 +7,7 @@ public class PrintQRCode
     {
         foreach (Printer printer in data.printers)
         {
-            //MessageBox.Show($"qr code {printer}");
+            WriteFile($"data {data.jsonData}");
             if (string.IsNullOrEmpty(printer.ip_address)) continue;
             IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
             Print(ptr, data);
@@ -16,8 +16,11 @@ public class PrintQRCode
 
     public async void Print(IntPtr printer, PrintingQueue data)
     {
-        //MessageBox.Show($"call qr code");
-        QrCodeModel q = QrCodeModel.GenerateMockData();
+        MessageBox.Show($"data.jsonData {data.jsonData}");
+        //QrCodeModel q = QrCodeModel.GenerateMockData();
+        var q = PrintingModel.QrCodeModel.FromJson($"{data.jsonData}");
+        //MessageBox.Show($"qrCodeModel {q}");
+
         DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
         string imageUrl = q.Shop.ImageUrl;
@@ -33,7 +36,10 @@ public class PrintQRCode
         //MessageBox.Show("sefjwiejdlqw");
 
         PM.AlignCenter(printer);
-        await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+        MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
+        if (!string.IsNullOrEmpty(imageUrl)) {
+            await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+        }
         PM.NewLine(printer);
         PM.PrintTextMediumBold(printer, "A3");
         PM.PrintTextBold(printer, qrScan);
@@ -49,7 +55,7 @@ public class PrintQRCode
         PM.NewLine(printer);
         BuffetName(printer, q);
         PM.NewLine(printer);
-        await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
+        //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
         PM.NewLine(printer);
         PM.CutPaper(printer);
     }
@@ -77,6 +83,26 @@ public class PrintQRCode
         if (string.IsNullOrEmpty(data.Bill.BuffetName)) return;
         string name = data.Bill.BuffetName;
         PM.PrintTextBold(printer, name);
+    }
+
+    static void WriteFile(string jsonString)
+    {
+        string folderPath = @"C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows";
+        string filePath = Path.Combine(folderPath, "json_log.txt");
+        try
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            File.WriteAllText(filePath, jsonString);
+            //MessageBox.Show($"JSON has been written to: {filePath}");
+        }
+        catch (Exception ex)
+        {
+            //MessageBox.Show($"Error writing to file: {ex.Message}");
+        }
     }
 
 }
