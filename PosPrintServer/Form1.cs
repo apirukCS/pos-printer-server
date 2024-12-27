@@ -21,20 +21,20 @@ namespace PosPrintServer
             //new PrintKitchen(null);/vvhh,dveeด
 
             /////
-            new PrintKitchen(null);
+            //new PrintKitchen(null);
             //new PrintBill(null);
         }
 
         private async void GetPrinters()
         {
-            var res = await PrinterAPI.GetPrinters("https://demo7riseplus.resrun-pos.com/rails-api//printers", WSToken());
+            var res = await PrinterAPI.GetPrinters("https://demo2riseplus.resrun-pos.com/rails-api//printers", WSToken());
             DisplayPrinters(res);
         }
 
         static async void ConnectSocket()
         {
             //MessageBox.Show("call connect socket");
-            var serverUrl = "wss://demo7riseplus.resrun-pos.com";
+            var serverUrl = "wss://demo2riseplus.resrun-pos.com";
             var options = new SocketIOOptions
             {
                 Reconnection = true,
@@ -75,12 +75,12 @@ namespace PosPrintServer
 
         static string WSTokenWithBearer()
         {
-            return "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6ImFQRG1SOHZDUGgzb3lXVHl3R1dYV3NteV9BanBDcE1teFo4cFRNMlQ2X1UifQ.eyJjb250ZW50Ijp7ImlzUHJpbnRlciI6dHJ1ZSwicHJpbnRlck5hbWUiOiJkZWZhdWx0In0sImRvbWFpbiI6ImRlbW83cmlzZXBsdXMiLCJpYXQiOjE3MzQzMTgwMjd9.iw3y_q-Z3QCMUklpkQ_Xg5FbTw0wu1S1YPS0I8L80Sgn-qHACm-IvSdyXI3OjE7pJss9FX2V0rMTekzRJrewAg";
+            return "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6IjBGNXlXY2dBdmd3WDNhcTZGbUJDSlZMNEI1QVdoa245anFYX0NuV3JtaWMifQ.eyJjb250ZW50Ijp7ImlzUHJpbnRlciI6dHJ1ZSwicHJpbnRlck5hbWUiOiJkZWZhdWx0In0sImRvbWFpbiI6ImRlbW8ycmlzZXBsdXMiLCJpYXQiOjE3MzUxMTk0MzJ9.fTVXHQQooPCq0FP_AxZpEfzFfr4KC-3-25f-dSbFddtW2QAmqqSJ6uJNhjelkEwvUlBmo6yDArtxueoszVMUAA";
         }
 
         static string WSToken()
         {
-            return "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6ImFQRG1SOHZDUGgzb3lXVHl3R1dYV3NteV9BanBDcE1teFo4cFRNMlQ2X1UifQ.eyJjb250ZW50Ijp7ImlzUHJpbnRlciI6dHJ1ZSwicHJpbnRlck5hbWUiOiJkZWZhdWx0In0sImRvbWFpbiI6ImRlbW83cmlzZXBsdXMiLCJpYXQiOjE3MzQzMTgwMjd9.iw3y_q-Z3QCMUklpkQ_Xg5FbTw0wu1S1YPS0I8L80Sgn-qHACm-IvSdyXI3OjE7pJss9FX2V0rMTekzRJrewAg";
+            return "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6IjBGNXlXY2dBdmd3WDNhcTZGbUJDSlZMNEI1QVdoa245anFYX0NuV3JtaWMifQ.eyJjb250ZW50Ijp7ImlzUHJpbnRlciI6dHJ1ZSwicHJpbnRlck5hbWUiOiJkZWZhdWx0In0sImRvbWFpbiI6ImRlbW8ycmlzZXBsdXMiLCJpYXQiOjE3MzUxMTk0MzJ9.fTVXHQQooPCq0FP_AxZpEfzFfr4KC-3-25f-dSbFddtW2QAmqqSJ6uJNhjelkEwvUlBmo6yDArtxueoszVMUAA";
         }
 
         static void DataPrintingQueue(SocketIOResponse data)
@@ -91,11 +91,10 @@ namespace PosPrintServer
                 var parsedData = JsonSerializer.Deserialize<PrintingQueue[]>(jsonData);
                 foreach (var item in parsedData)
                 {
-                    //MessageBox.Show($"item.printingType {item}");
                     switch (item.printingType)
                     {
                         case "kitchen":
-                            KitchenPrint(item); ////
+                            KitchenPrint(item); //
                             break;
                         case "qr-code":
                             QrCodePrint(item); //
@@ -104,26 +103,19 @@ namespace PosPrintServer
                             PrebillPrint(item);
                             break;
                         case "queues":
-                            QueuePrint(item); //////
+                            QueuePrint(item); //
                             break;
                         case "receipt":
                             ReceiptPrint(item);
                             break;
-                        case "sales_reports-daily-summary":
+                        case "sales_reports-daily_summary":
+                            // WriteFile($"{item.jsonData}");
                             SalesReportsDailySummaryPrint(item);
                             break;
                         default:
                             MessageBox.Show("PrintingType invalid");
                             break;
                     }
-                    //MessageBox.Show(item.PrintingType);
-                    //kitchen //cacel bill item //change bill type(take home)
-                    //qr-code
-                    //pre-bill (check bill)
-                    //queues (บัตรคิว)
-                    //receipt //reprint //payment
-                    //sales_reports-daily-summary //รายงานลิ้นชักเงินสด //รายงานสรุปยอดขายรายวัน //รายงานสรุปยอดขายรายเดือน
-                    //
                 }
             }
             catch (JsonException ex)
@@ -214,6 +206,26 @@ namespace PosPrintServer
             var res=  PM.GetPrinterStatus(ptr, 2);
             //MessageBox.Show($"res {res}");
             return res;
+        }
+
+        static void WriteFile(string jsonString)
+        {
+            string folderPath = @"C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows";
+            string filePath = Path.Combine(folderPath, "json_log.txt");
+            try
+            {
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                File.WriteAllText(filePath, jsonString);
+                //MessageBox.Show($"JSON has been written to: {filePath}");
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show($"Error writing to file: {ex.Message}");
+            }
         }
     }
 }

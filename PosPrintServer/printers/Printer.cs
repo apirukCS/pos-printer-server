@@ -14,7 +14,7 @@ public class PrinterManager
         int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
         connectedPrinters[ipAddress] = printer;
         return printer;
-        
+
         //if (connectedPrinters.ContainsKey(ipAddress))
         //{
         //    return connectedPrinters[ipAddress];
@@ -26,6 +26,10 @@ public class PrinterManager
         //    connectedPrinters[ipAddress] = printer;
         //    return printer;
         //}
+    }
+
+    public static void ClosePort(IntPtr printer) {
+        ESCPOS.ClosePort(printer);
     }
 
     public static string GetPrinterStatus(IntPtr printer,int status) {
@@ -717,9 +721,9 @@ public class PrinterManager
     public static void AlignCenter(IntPtr printer)
     {
         byte[] centerAlignCommand = new byte[] { 0x1B, 0x61, 0x01 };
-        MessageBox.Show($"printer {printer}");
+        //MessageBox.Show($"printer {printer}");
         var res = ESCPOS.WriteData(printer, centerAlignCommand, centerAlignCommand.Length);
-        MessageBox.Show($"res {res}");
+        //MessageBox.Show($"res {res}");
     }
 
     public static void TextAlignLeft(IntPtr printer)

@@ -10,10 +10,11 @@ namespace PrintingModel
         public Printer[] printers { get; set; } = Array.Empty<Printer>();
         public string? imgData { get; set; }
         public string? imgKey { get; set; }
+        public dynamic jsonData { get; set;  }
 
         public override string ToString()
         {
-            return $"ImgKey: {imgKey}, PrintingType: {printingType}, PrintersCount: {printers.Length}";
+            return $"ImgKey: {imgKey}, PrintingType: {printingType}, PrintersCount: {printers.Length}, jsonData: {jsonData}";
         }
     }
 
