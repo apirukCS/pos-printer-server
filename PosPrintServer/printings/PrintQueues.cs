@@ -8,14 +8,14 @@ using PM = PrinterManager;
 public class PrintQueue
 {
     public PrintQueue(PrintingQueue data) {
-        MessageBox.Show($"data {data}");
-        foreach (Printer printer in data.printers)
-        {
-            if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            MessageBox.Show($"data {data}");
-            Print(ptr, data);
-        }
+        //MessageBox.Show($"data {data}");
+        //foreach (Printer printer in data.printers)
+        //{
+        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
+        //    IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+        //    MessageBox.Show($"data {data}");
+        //    Print(ptr, data);
+        //}
         //IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
         //Print(ptr, data);
     }

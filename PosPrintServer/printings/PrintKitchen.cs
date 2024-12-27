@@ -14,9 +14,11 @@ using System.IO;
 
 public class PrintKitchen
 {
-    public PrintKitchen(PrintingQueue data)
+    public static async Task<PrintKitchen> Create(PrintingQueue data)
     {
-        InitializePrinting(data).Wait();
+        var instance = new PrintKitchen();
+        await instance.InitializePrinting(data);
+        return instance;
     }
 
     private async Task InitializePrinting(PrintingQueue data)
@@ -24,17 +26,15 @@ public class PrintKitchen
         foreach (Printer printer in data.printers)
         {
             if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            //MessageBox.Show("testest");
+            IntPtr ptr = await PM.GetPrinterConnection(printer.ip_address);
             KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(data.jsonData);
             await Print(ptr, model);
-            await Task.Delay(500);
         }
     }
 
     public async Task Print(IntPtr printer, KitchenModel data)
     {
-        await Task.Run(() =>
+        await Task.Run(async () =>
         {
             PM.AlignCenter(printer);
             AddKitchenTitle(printer, data);
@@ -47,7 +47,8 @@ public class PrintKitchen
             PM.DrawLine(printer);
             AddBillItems(printer, data);
             PM.CutPaper(printer);
-            PM.ClosePort(printer);
+            //PM.ClosePort(printer);
+            await Task.Delay(500);
         });
     }
 
