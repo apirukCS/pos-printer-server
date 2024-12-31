@@ -43,6 +43,7 @@ public class PrintQueue
         PM.NewLine(printer);
         PM.PrintTextBold(printer, date);
         PM.CutPaper(printer);
+        PM.ClosePort(printer);
     }
 
     static void WriteFile(string jsonString)

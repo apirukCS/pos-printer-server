@@ -25,17 +25,17 @@ public class PrintKitchen
         {
             if (string.IsNullOrEmpty(printer.ip_address)) continue;
             IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            //MessageBox.Show("testest");
             KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(data.jsonData);
             await Print(ptr, model);
-            await Task.Delay(500);
         }
+        await Task.Delay(500);
     }
 
     public async Task Print(IntPtr printer, KitchenModel data)
     {
         await Task.Run(() =>
         {
+            //MessageBox.Show("call printing kitchen");
             PM.AlignCenter(printer);
             AddKitchenTitle(printer, data);
             PM.TextAlignLeft(printer);
