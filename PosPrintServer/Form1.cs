@@ -109,7 +109,6 @@ namespace PosPrintServer
                             ReceiptPrint(item);
                             break;
                         case "sales_reports-daily_summary":
-                            // WriteFile($"{item.jsonData}");
                             SalesReportsDailySummaryPrint(item);
                             break;
                         default:
@@ -202,7 +201,7 @@ namespace PosPrintServer
         }
 
         private string CheckPrinterStatus(string ip) {
-            IntPtr ptr = PM.GetPrinterConnection(ip);
+            IntPtr ptr = PM.GetPrinterConnectionForStatus(ip);
             var res=  PM.GetPrinterStatus(ptr, 2);
             //MessageBox.Show($"res {res}");
             return res;

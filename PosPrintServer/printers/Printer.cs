@@ -7,25 +7,40 @@ using System.Text.RegularExpressions;
 public class PrinterManager
 {
     private static ConcurrentDictionary<string, IntPtr> connectedPrinters = new ConcurrentDictionary<string, IntPtr>();
-
     public static IntPtr GetPrinterConnection(string ipAddress)
+    {
+        if (connectedPrinters.ContainsKey(ipAddress))
+        {
+            return connectedPrinters[ipAddress];
+        }
+        else
+        {
+            IntPtr printer = ESCPOS.InitPrinter("");
+            int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+            if (s != 0) {
+                Thread.Sleep(400);
+                s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+
+                if (s != 0) {
+                    Thread.Sleep(400);
+                    s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+
+                    if (s != 0) {
+                        Thread.Sleep(400);
+                        s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+                    }
+                }
+            }
+            connectedPrinters[ipAddress] = printer;
+            return printer;
+        }
+    }
+
+    public static IntPtr GetPrinterConnectionForStatus(string ipAddress)
     {
         IntPtr printer = ESCPOS.InitPrinter("");
         int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-        connectedPrinters[ipAddress] = printer;
         return printer;
-
-        //if (connectedPrinters.ContainsKey(ipAddress))
-        //{
-        //    return connectedPrinters[ipAddress];
-        //}
-        //else
-        //{
-        //    IntPtr printer = ESCPOS.InitPrinter("");
-        //    int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-        //    connectedPrinters[ipAddress] = printer;
-        //    return printer;
-        //}
     }
 
     public static void ClosePort(IntPtr printer) {
@@ -335,6 +350,11 @@ public class PrinterManager
         //MessageBox.Show($"PrintTextThreeColumn \n{output.ToString()}");
         byte[] textBytes = Encoding.GetEncoding("TIS-620").GetBytes(output.ToString());
         ESCPOS.WriteData(printer, textBytes, textBytes.Length);
+    }
+
+    public static void PrintSymbol(IntPtr printer,int type, string data, int errLevel, int w, int h, int align) {
+        ESCPOS.PrintSymbol(printer, type, data, errLevel, w, h, align);
+        NewLine(printer);
     }
 
     //private static int SpecialCharacterCount(string text)

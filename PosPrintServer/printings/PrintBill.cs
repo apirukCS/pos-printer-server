@@ -62,6 +62,8 @@ public class PrintBill
         AddMembership(printer, bill);
         AddFooterBill(printer, bill);
         PM.CutPaper(printer);
+        PM.ClosePort(printer);
+        await Task.Delay(500);
     }
 
     public async void PrintingReceipt(IntPtr printer, BillModel bill, string type)
@@ -79,11 +81,13 @@ public class PrintBill
         AddMembership(printer, bill);
         AddFooterBill(printer, bill);
         PM.CutPaper(printer);
+        PM.ClosePort(printer);
+        await Task.Delay(500);
     }
 
     static async Task AddLogo(IntPtr printer, BillModel bill)
     {
-        await PM.PrintImageUrl(printer, bill.shop.image_url, "image.jpg");
+        await PM.PrintImageUrl(printer, bill?.shop?.image_url ?? "", "image.jpg");
         PM.NewLine(printer, 70);
     }
 

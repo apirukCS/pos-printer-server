@@ -29,6 +29,7 @@ public class PrintReport
         //PM.PrintTextOnly(ptr, "xxxxxxxx");
         PM.NewLine(ptr);
         PM.CutPaper(ptr);
+        PM.ClosePort(ptr);
         //MessageBox.Show($"{ptr}");
     }
 
