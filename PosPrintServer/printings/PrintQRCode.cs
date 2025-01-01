@@ -1,25 +1,31 @@
 ﻿using PM = PrinterManager;
 using PrintingModel;
+using System.Text.Json;
 
 public class PrintQRCode
 {
-    public PrintQRCode(PrintingQueue data)
+    public PrintQRCode(IntPtr ptr, PrintingQueue data)
     {
-        foreach (Printer printer in data.printers)
-        {
-            WriteFile($"data {data.jsonData}");
-            if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            Print(ptr, data);
-        }
+        //foreach (Printer printer in data.printers)
+        //{
+        //    WriteFile($"data {data.jsonData}");
+        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
+        //    //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+        //    IntPtr ptr = ESCPOS.InitPrinter("");
+        //    Print(ptr, data);
+        //}
+        Print(ptr, data);
     }
 
     public async void Print(IntPtr printer, PrintingQueue data)
     {
-        MessageBox.Show($"data.jsonData {data.jsonData}");
-        //QrCodeModel q = QrCodeModel.GenerateMockData();
-        var q = PrintingModel.QrCodeModel.FromJson($"{data.jsonData}");
-        //MessageBox.Show($"qrCodeModel {q}");
+        //MessageBox.Show($"data.jsonData {data.jsonData}");
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        string jsonString = JsonSerializer.Serialize(data.jsonData);
+        var q = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
 
         DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
@@ -28,20 +34,20 @@ public class PrintQRCode
         string table = $"{q.Bill.TableZoneName}{q.Bill.TableName}";
         string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
         string currentDate = dateTimeHelper.GetCurrentDate("th");
-        var times = q.Bill.OpenTime.Split(':');
-        string time = q.Language == "th"
+        var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
+        string time = times.Length > 0 ? q.Language == "th"
             ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
-            : $"Start time: {times[0]}:{times[1]}";
+            : $"Start time: {times[0]}:{times[1]}" : "";
 
         //MessageBox.Show("sefjwiejdlqw");
 
         PM.AlignCenter(printer);
-        MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
+        //MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
         if (!string.IsNullOrEmpty(imageUrl)) {
             await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
         }
         PM.NewLine(printer);
-        PM.PrintTextMediumBold(printer, "A3");
+        PM.PrintTextMediumBold(printer, table);
         PM.PrintTextBold(printer, qrScan);
         PM.LineSpace(printer, 40);
         PM.NewLine(printer);
@@ -49,13 +55,16 @@ public class PrintQRCode
         PM.LineSpaceDefault(printer);
         PM.NewLine(printer);
         //start time
-        PM.PrintTextMediumBold(printer, time);
+        if (string.IsNullOrEmpty(time)) {
+            PM.PrintTextMediumBold(printer, time);
+        }
         PM.NewLine(printer);
         BuffetEndTime(printer, q);
         PM.NewLine(printer);
         BuffetName(printer, q);
         PM.NewLine(printer);
         //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
+        PM.PrintSymbol(printer, 49, qrcode, 48, 200, 200, 1);
         PM.NewLine(printer);
         PM.CutPaper(printer);
     }

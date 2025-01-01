@@ -12,7 +12,8 @@ public class PrintQueue
         foreach (Printer printer in data.printers)
         {
             if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+            //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+            IntPtr ptr = ESCPOS.InitPrinter("");
             MessageBox.Show($"data {data}");
             Print(ptr, data);
         }
