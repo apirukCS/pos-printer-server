@@ -12,6 +12,11 @@ namespace PosPrintServer
 {
     public partial class Form1 : Form
     {
+        public static List<GroupedData> groupedDataStore = new();
+        private static readonly object lockObject = new(); // สำหรับป้องกัน race condition
+        private static System.Timers.Timer? printTimer = null;
+        private static bool isPrintingInProgress = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -83,40 +88,62 @@ namespace PosPrintServer
             return "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSIsImtpZCI6IjBGNXlXY2dBdmd3WDNhcTZGbUJDSlZMNEI1QVdoa245anFYX0NuV3JtaWMifQ.eyJjb250ZW50Ijp7ImlzUHJpbnRlciI6dHJ1ZSwicHJpbnRlck5hbWUiOiJkZWZhdWx0In0sImRvbWFpbiI6ImRlbW8ycmlzZXBsdXMiLCJpYXQiOjE3MzUxMTk0MzJ9.fTVXHQQooPCq0FP_AxZpEfzFfr4KC-3-25f-dSbFddtW2QAmqqSJ6uJNhjelkEwvUlBmo6yDArtxueoszVMUAA";
         }
 
-        static void DataPrintingQueue(SocketIOResponse data)
+        public static void DataPrintingQueue(SocketIOResponse data)
         {
             try
             {
                 string jsonData = data.ToString();
                 var parsedData = JsonSerializer.Deserialize<PrintingQueue[]>(jsonData);
-                foreach (var item in parsedData)
+                //ฉํนต้องการนำ printingType เข้าไปใน jsonData ที่ตรงนี้
+
+                foreach (var queue in parsedData)
                 {
-                    switch (item.printingType)
+                    var jsonDataDict = new Dictionary<string, object>();
+                    if (queue.jsonData is JsonElement jsonElement && jsonElement.ValueKind != JsonValueKind.Undefined)
                     {
-                        case "kitchen":
-                            KitchenPrint(item); //
-                            break;
-                        case "qr-code":
-                            QrCodePrint(item); //
-                            break;
-                        case "pre-bill":
-                            PrebillPrint(item);
-                            break;
-                        case "queues":
-                            QueuePrint(item); //
-                            break;
-                        case "receipt":
-                            ReceiptPrint(item);
-                            break;
-                        case "sales_reports-daily_summary":
-                            // WriteFile($"{item.jsonData}");
-                            SalesReportsDailySummaryPrint(item);
-                            break;
-                        default:
-                            MessageBox.Show("PrintingType invalid");
-                            break;
+                        foreach (var property in jsonElement.EnumerateObject())
+                        {
+                            jsonDataDict[property.Name] = property.Value;
+                        }
+                    }
+
+                    jsonDataDict["printing_type"] = queue.printingType;
+                    queue.jsonData = jsonDataDict;
+                }
+
+                var groupedData = parsedData
+                    .SelectMany(queue => queue.printers.Select(printer => new
+                    {
+                        printer.ip_address,
+                        queue.jsonData
+                    }))
+                    .GroupBy(item => item.ip_address)
+                    .ToList();
+
+                lock (lockObject)
+                {
+                    foreach (var group in groupedData)
+                    {
+                        var existingGroup = groupedDataStore.FirstOrDefault(g => g.IpAddress == group.Key);
+                        if (existingGroup != null)
+                        {
+                            // เพิ่ม JsonDataList เข้าไปในกลุ่มที่มีอยู่แล้ว
+                            existingGroup.JsonDataList.AddRange(group.Select(item => item.jsonData));
+                        }
+                        else
+                        {
+                            // สร้างกลุ่มใหม่
+                            groupedDataStore.Add(new GroupedData
+                            {
+                                IpAddress = group.Key,
+                                JsonDataList = group.Select(item => item.jsonData).ToList()
+                            });
+                        }
                     }
                 }
+
+                if (isPrintingInProgress) return;
+                //StartPrintingProcess();
             }
             catch (JsonException ex)
             {
@@ -124,18 +151,36 @@ namespace PosPrintServer
             }
         }
 
-        public static void KitchenPrint(PrintingQueue item)
+        //static void DataPrintingQueue(SocketIOResponse data)
+        //{
+        //    try
+        //    {
+        //        string jsonData = data.ToString();
+        //        var parsedData = JsonSerializer.Deserialize<PrintingQueue[]>(jsonData);
+        //        //***จัดกลุ่มข้อมูล parsedData ข้อมูลที่จะได้คือ กลุ่มเครื่องปริ้น ตัวอย่างข้อมูลที่จะได้คือ 
+        //        //*** [{'ip_address':'192.123.12.1',[{parsedData[...].jsonData},{parsedData[...].jsonData}]}]
+
+        //    }
+        //    catch (JsonException ex)
+        //    {
+        //        MessageBox.Show($"Failed to parse JSON: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+        //}
+
+        public static void KitchenPrint(IntPtr ptr, PrintingQueue item)
         {
-            //MessageBox.Show("test");
-            var printer = new PrintKitchen(item);
-            GC.KeepAlive(printer);
+            //MessageBox.Show("calll kitjjj");
+            if (ptr != null) {
+                var printer = new PrintKitchen(ptr, item);
+                GC.KeepAlive(printer);
+            }
         }
 
-        static void QrCodePrint(PrintingQueue item)
+        static void QrCodePrint(IntPtr ptr, PrintingQueue item)
         {
             //MessageBox.Show("qr code print");
             //Thread.Sleep(100);
-            var qrCode = new PrintQRCode(item);
+            var qrCode = new PrintQRCode(ptr ,item);
             GC.KeepAlive(qrCode);
         }
 
@@ -202,10 +247,202 @@ namespace PosPrintServer
         }
 
         private string CheckPrinterStatus(string ip) {
-            IntPtr ptr = PM.GetPrinterConnection(ip);
-            var res=  PM.GetPrinterStatus(ptr, 2);
+            //IntPtr? ptr = PM.GetPrinterConnection(ip);
+            //if (ptr) { }
+            //var res =  PM.GetPrinterStatus(ptr, 2);
             //MessageBox.Show($"res {res}");
-            return res;
+
+            IntPtr ptr = ESCPOS.InitPrinter("");
+            int s = ESCPOS.OpenPort(ptr, $"NET,{ip}");
+            int status = 2;
+            int ret = ESCPOS.GetPrinterState(ptr, ref status);
+            ESCPOS.ClosePort(ptr);
+            if (ret == 0)
+            {
+                if (0x12 == status)
+                {
+                    return "Ready";
+                }
+                else if ((status & 0b100) > 0)
+                {
+                    return "Cover opened";
+                }
+                else if ((status & 0b1000) > 0)
+                {
+                    return "Feed button has been pressed";
+                }
+                else if ((status & 0b100000) > 0)
+                {
+                    return "Printer is out of paper";
+                }
+                else if ((status & 0b1000000) > 0)
+                {
+                    return "Error condition";
+                }
+                else
+                {
+                    return "Other Error";
+                }
+            }
+            else if (ret == -2)
+            {
+                return "Failed with invalid handle";
+            }
+            else if (ret == -1)
+            {
+                return "Invalid argument";
+            }
+            else if (ret == -4)
+            {
+                return "Failed, out of memory";
+            }
+            else if (ret == -9)
+            {
+                return "Failed to send data";
+            }
+            else if (ret == -10)
+            {
+                return "Write data timed out";
+            }
+            else
+            {
+                return "Failed to connection";
+            }
+            return "";
+        }
+
+        public static void StartPrintingProcess()
+        {
+            try {
+                //if (isPrintingInProgress) return; // ห้ามเริ่มใหม่หากกำลังพิมพ์อยู่
+                //isPrintingInProgress = true;
+
+                //if (printTimer != null)
+                //{
+                //    printTimer.Stop();
+                //    printTimer.Dispose();
+                //}
+
+                isPrintingInProgress = true;
+
+                printTimer = new System.Timers.Timer(1000); // เรียกทุกๆ 1 วินาที
+                printTimer.Elapsed += async (sender, e) =>
+                {
+                    //printTimer.Stop();
+
+                    List<(string IpAddress, dynamic JsonData)> dataToPrint = new();
+
+                    // ดึงข้อมูลออกจากตัวแปรกลาง (thread-safe)
+                    lock (lockObject)
+                    {
+                        foreach (var group in groupedDataStore.ToList()) // ใช้ ToList เพื่อหลีกเลี่ยง collection ถูกเปลี่ยนระหว่าง loop
+                        {
+                            if (group.JsonDataList.Any())
+                            {
+                                // ดึง JsonData ตัวแรกของกลุ่ม
+                                var jsonData = group.JsonDataList.First();
+                                dataToPrint.Add((group.IpAddress, jsonData));
+
+                                // ลบ JsonData ตัวแรกออกจากกลุ่ม
+                                group.JsonDataList.RemoveAt(0);
+                            }
+                        }
+                    }
+
+                    // สร้าง Task เพื่อพิมพ์พร้อมกัน
+                    if (dataToPrint.Any())
+                    {
+                        var tasks = dataToPrint.Select(data => (Task)PrintDataAsync(data.IpAddress, data.JsonData));
+                        await Task.WhenAll(tasks);
+                    }
+
+                    if (!groupedDataStore.Any(group => group.JsonDataList.Any()))
+                    {
+                        printTimer.Stop();
+                        printTimer.Dispose();
+                        isPrintingInProgress = false;
+                    }
+                };
+                printTimer.Start();
+            }
+            catch (Exception ex) {
+                MessageBox.Show("เกิดข้อผิดพลาด StartPrintingProcess");
+            }
+        }
+
+        public static void AddToGroupedDataStore(string ipAddress, dynamic jsonData)
+        {
+            lock (groupedDataStore)
+            {
+                var existingGroup = groupedDataStore.FirstOrDefault(group => group.IpAddress == ipAddress);
+                if (existingGroup != null)
+                {
+                    existingGroup.JsonDataList.Add(jsonData);
+                }
+                else
+                {
+                    groupedDataStore.Add(new GroupedData
+                    {
+                        IpAddress = ipAddress,
+                        JsonDataList = new List<dynamic> { jsonData }
+                    });
+                }
+            }
+        }
+
+
+        private static async Task PrintDataAsync(string ipAddress, dynamic jsonData)
+        {
+            try {
+                await Task.Run(() =>
+                {
+                    string printingType = jsonData["printing_type"];
+                    var itemDict = (Dictionary<string, object>)jsonData;
+                    var item = new PrintingQueue
+                    {
+                        jsonData = itemDict,
+                    };
+
+                    //IntPtr? ptr = PM.GetPrinterConnection(ipAddress);
+                    IntPtr ptr = ESCPOS.InitPrinter("");
+                    int s = ESCPOS.OpenPort(ptr, $"NET,{ipAddress}");
+                    if (s != 0)
+                    {
+                        AddToGroupedDataStore(ipAddress, jsonData);
+                        //return;
+                    }
+
+                    switch (printingType)
+                    {
+                        case "kitchen":
+                            KitchenPrint(ptr, item); //
+                            break;
+                        case "qr-code":
+                            QrCodePrint(ptr ,item); //
+                            break;
+                        case "pre-bill":
+                            PrebillPrint(item);
+                            break;
+                        case "queues":
+                            QueuePrint(item); //
+                            break;
+                        case "receipt":
+                            ReceiptPrint(item);
+                            break;
+                        case "sales_reports-daily_summary":
+                            // WriteFile($"{item.jsonData}");
+                            SalesReportsDailySummaryPrint(item);
+                            break;
+                        default:
+                            MessageBox.Show("PrintingType invalid");
+                            break;
+                    }
+                });
+
+            }
+            catch (Exception e) {
+                MessageBox.Show("เกิดข้อผิดพลาด PrintDataAsync");
+            }
         }
 
         static void WriteFile(string jsonString)

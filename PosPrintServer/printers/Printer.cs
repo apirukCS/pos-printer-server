@@ -8,24 +8,40 @@ public class PrinterManager
 {
     private static ConcurrentDictionary<string, IntPtr> connectedPrinters = new ConcurrentDictionary<string, IntPtr>();
 
-    public static IntPtr GetPrinterConnection(string ipAddress)
+    public static IntPtr? GetPrinterConnection(string ipAddress)
     {
         IntPtr printer = ESCPOS.InitPrinter("");
         int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-        connectedPrinters[ipAddress] = printer;
+        if (s != 0)
+        {
+            return null;
+        }
+        //connectedPrinters[ipAddress] = printer;
         return printer;
 
         //if (connectedPrinters.ContainsKey(ipAddress))
         //{
         //    return connectedPrinters[ipAddress];
         //}
-        //else
+        //elset
         //{
         //    IntPtr printer = ESCPOS.InitPrinter("");
         //    int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
         //    connectedPrinters[ipAddress] = printer;
         //    return printer;
         //}
+    }
+
+    public static void PrintSymbol(IntPtr printer, int type, string data, int errLevel, int w, int h, int align)
+    {
+        ESCPOS.PrintSymbol(printer, type, data, errLevel, w, h, align);
+        NewLine(printer);
+    }
+
+    public static IntPtr GetPrinterConnectionOnly(string ipAddress) {
+        IntPtr printer = ESCPOS.InitPrinter("");
+        int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        return printer;
     }
 
     public static void ClosePort(IntPtr printer) {

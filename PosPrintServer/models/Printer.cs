@@ -9,3 +9,9 @@ public class PrinterModel
     public bool? is_ip_connection { get; set; }
     public string ip_address { get; set; } = string.Empty;
 }
+
+public class GroupedData
+{
+    public string IpAddress { get; set; }
+    public List<dynamic> JsonDataList { get; set; } = new();
+}

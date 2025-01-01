@@ -16,7 +16,8 @@ public class PrintReport
     public PrintReport()
     {
         //MessageBox.Show("ssssss");
-        IntPtr ptr = PM.GetPrinterConnection("192.168.1.70");
+        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.70");
+        IntPtr ptr = ESCPOS.InitPrinter("");
         Report reportBill = GenerateMockBillData();
         ExecutePrintReport(ptr, reportBill, "xxxx");
         //PM.PrintTextOnly(ptr, "xxxxxxxx");
