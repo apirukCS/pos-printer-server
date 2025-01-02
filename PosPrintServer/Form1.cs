@@ -20,7 +20,7 @@ namespace PosPrintServer
         public Form1()
         {
             InitializeComponent();
-            GetPrinters();
+            //GetPrinters();
             ConnectSocket();
             //new PrintQRCode(null);/
             //new PrintKitchen(null);/vvhh,dveeด
@@ -143,7 +143,7 @@ namespace PosPrintServer
                 }
 
                 if (isPrintingInProgress) return;
-                //StartPrintingProcess();
+                StartPrintingProcess();
             }
             catch (JsonException ex)
             {
@@ -167,11 +167,12 @@ namespace PosPrintServer
         //    }
         //}
 
-        public static void KitchenPrint(IntPtr ptr, PrintingQueue item)
+        public static async void KitchenPrint(IntPtr ptr, PrintingQueue item)
         {
             //MessageBox.Show("calll kitjjj");
             if (ptr != null) {
-                var printer = new PrintKitchen(ptr, item);
+                //var printer = new PrintKitchen(ptr, item);
+                var printer = await PrintKitchen.Create(ptr, item);
                 GC.KeepAlive(printer);
             }
         }
@@ -325,7 +326,7 @@ namespace PosPrintServer
 
                 isPrintingInProgress = true;
 
-                printTimer = new System.Timers.Timer(1000); // เรียกทุกๆ 1 วินาที
+                printTimer = new System.Timers.Timer(500); // เรียกทุกๆ 1 วินาที
                 printTimer.Elapsed += async (sender, e) =>
                 {
                     //printTimer.Stop();
@@ -352,8 +353,12 @@ namespace PosPrintServer
                     // สร้าง Task เพื่อพิมพ์พร้อมกัน
                     if (dataToPrint.Any())
                     {
+                        //WriteLog.Write($"call print receipt");
                         var tasks = dataToPrint.Select(data => (Task)PrintDataAsync(data.IpAddress, data.JsonData));
                         await Task.WhenAll(tasks);
+                        //for (int i = 0; i < dataToPrint.Count; i++) {
+                        //    await PrintDataAsync(dataToPrint[i].IpAddress, dataToPrint[i].JsonData);
+                        //}
                     }
 
                     if (!groupedDataStore.Any(group => group.JsonDataList.Any()))
@@ -387,6 +392,15 @@ namespace PosPrintServer
                         JsonDataList = new List<dynamic> { jsonData }
                     });
                 }
+
+                //printTimer = new System.Timers.Timer(200);
+                //printTimer.Start();
+                StartPrintingProcess();
+                //if (printTimer == null) {
+                //    StartPrintingProcess();
+                //}
+
+                //
             }
         }
 
@@ -409,7 +423,12 @@ namespace PosPrintServer
                     if (s != 0)
                     {
                         AddToGroupedDataStore(ipAddress, jsonData);
-                        //return;
+                        string jsonString = JsonSerializer.Serialize(jsonData);
+                        //WriteLog.Write($"resent {jsonString}");
+                        return;
+                    }
+                    else {
+                        //WriteLog.Write($"success {jsonData}");
                     }
 
                     switch (printingType)
@@ -437,11 +456,13 @@ namespace PosPrintServer
                             MessageBox.Show("PrintingType invalid");
                             break;
                     }
+                    // await Task.Delay(500);
                 });
 
             }
             catch (Exception e) {
-                MessageBox.Show("เกิดข้อผิดพลาด PrintDataAsync");
+                //WriteLog.Write($"err {e}");
+                MessageBox.Show($"เกิดข้อผิดพลาด PrintDataAsync {e}");
             }
         }
 

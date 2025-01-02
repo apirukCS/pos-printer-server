@@ -32,9 +32,10 @@ public class PrinterManager
         //}
     }
 
-    public static void PrintSymbol(IntPtr printer, int type, string data, int errLevel, int w, int h, int align)
+    public static void PrintSymbol(IntPtr printer, string data)
     {
-        ESCPOS.PrintSymbol(printer, type, data, errLevel, w, h, align);
+        ESCPOS.PrintSymbol(printer, 49, data, 48, 10, 10, 1);
+        //PrintSymbol(printer, 49, test, 48, 10, 10, 1);
         NewLine(printer);
     }
 

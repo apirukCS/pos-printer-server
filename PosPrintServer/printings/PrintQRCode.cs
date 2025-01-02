@@ -64,7 +64,7 @@ public class PrintQRCode
         BuffetName(printer, q);
         PM.NewLine(printer);
         //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
-        PM.PrintSymbol(printer, 49, qrcode, 48, 200, 200, 1);
+        PM.PrintSymbol(printer, qrcode);
         PM.NewLine(printer);
         PM.CutPaper(printer);
     }
