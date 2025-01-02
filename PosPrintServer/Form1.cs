@@ -20,7 +20,7 @@ namespace PosPrintServer
         public Form1()
         {
             InitializeComponent();
-            //GetPrinters();
+            GetPrinters();
             ConnectSocket();
             //new PrintQRCode(null);/
             //new PrintKitchen(null);/vvhh,dveeด
@@ -167,7 +167,7 @@ namespace PosPrintServer
         //    }
         //}
 
-        public static async void KitchenPrint(IntPtr ptr, PrintingQueue item)
+        public static async Task KitchenPrint(IntPtr ptr, PrintingQueue item)
         {
             //MessageBox.Show("calll kitjjj");
             if (ptr != null) {
@@ -408,7 +408,7 @@ namespace PosPrintServer
         private static async Task PrintDataAsync(string ipAddress, dynamic jsonData)
         {
             try {
-                await Task.Run(() =>
+                await Task.Run(async () =>
                 {
                     string printingType = jsonData["printing_type"];
                     var itemDict = (Dictionary<string, object>)jsonData;
@@ -422,9 +422,15 @@ namespace PosPrintServer
                     int s = ESCPOS.OpenPort(ptr, $"NET,{ipAddress}");
                     if (s != 0)
                     {
+                        //await Task.Delay(300);
+
+                        //ESCPOS.ClosePort(ptr);
+                        // ESCPOS.ReleasePrinter(ptr);
+
                         AddToGroupedDataStore(ipAddress, jsonData);
-                        string jsonString = JsonSerializer.Serialize(jsonData);
-                        //WriteLog.Write($"resent {jsonString}");
+                        
+                        //string jsonString = JsonSerializer.Serialize(jsonData);
+                        // WriteLog.Write($"resent");
                         return;
                     }
                     else {
@@ -434,7 +440,7 @@ namespace PosPrintServer
                     switch (printingType)
                     {
                         case "kitchen":
-                            KitchenPrint(ptr, item); //
+                            await KitchenPrint(ptr, item); //
                             break;
                         case "qr-code":
                             QrCodePrint(ptr ,item); //
@@ -464,6 +470,16 @@ namespace PosPrintServer
                 //WriteLog.Write($"err {e}");
                 MessageBox.Show($"เกิดข้อผิดพลาด PrintDataAsync {e}");
             }
+            // finally
+            // {
+            //     if (ptr != IntPtr.Zero)
+            //     {
+            //         // 5. ปิดการเชื่อมต่อและคืนทรัพยากร
+            //         WriteLog.Write($"closee");
+            //         ESCPOS.ClosePort(ptr);    // ปิดการเชื่อมต่อก่อน
+            //         ESCPOS.ReleasePrinter(ptr); // แล้วค่อยคืนทรัพยากร
+            //     }
+            // }
         }
 
         static void WriteFile(string jsonString)
