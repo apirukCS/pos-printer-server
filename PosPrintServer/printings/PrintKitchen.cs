@@ -59,7 +59,7 @@ public class PrintKitchen
             PM.DrawLine(printer);
             AddBillItems(printer, data);
             PM.CutPaper(printer);
-            //PM.ClosePort(printer);
+            PM.ClosePort(printer);
             await Task.Delay(300);
         });
     }
