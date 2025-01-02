@@ -14,61 +14,72 @@ using System.IO;
 
 public class PrintKitchen
 {
-    public PrintKitchen(IntPtr ptr, PrintingQueue data)
+    public PrintKitchen()
     {
         //IntPtr ptr = PM.GetPrinterConnection(ipAddress);
         //KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(data.jsonData);
-        string jsonString = JsonSerializer.Serialize(data.jsonData);
+        //string jsonString = JsonSerializer.Serialize(data.jsonData);
 
-        // Deserialize JSON string เป็น KitchenModel
-        KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(jsonString);
-        Print(ptr, model);
-        //InitializePrinting(ipAddress, data).Wait();
+        //// Deserialize JSON string เป็น KitchenModel
+        //KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(jsonString);
+        //Print(ptr, model);
+        //InitializePrinting(ptr, data.jsonData).Wait();
     }
 
-    //private async Task InitializePrinting(string ipAddress, dynamic data)
-    //{   
-    //        IntPtr ptr = PM.GetPrinterConnection(ipAddress);
-    //        KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(data);
-    //        await Print(ptr, model);
-    //}
-
-    //public async Task Print(IntPtr printer, KitchenModel data)
-    //{
-    //    await Task.Run(() =>
-    //    {
-    //        MessageBox.Show("call start print");
-    //        PM.AlignCenter(printer);
-    //        AddKitchenTitle(printer, data);
-    //        PM.TextAlignLeft(printer);
-    //        AddOrderTime(printer, data);
-    //        AddTable(printer, data);
-    //        AddBuffet(printer, data);
-    //        AddBillNo(printer, data);
-    //        AddStaff(printer, data);
-    //        PM.DrawLine(printer);
-    //        AddBillItems(printer, data);
-    //        PM.CutPaper(printer);
-    //        PM.ClosePort(printer);
-    //    });
-    //}
-
-    public void Print(IntPtr printer, KitchenModel data)
+    public static async Task<PrintKitchen> Create(IntPtr ptr, PrintingQueue data)
     {
-        //MessageBox.Show($"call printing kitchen {data.orderer_name}");
-        PM.AlignCenter(printer);
-        AddKitchenTitle(printer, data);
-        PM.TextAlignLeft(printer);
-        AddOrderTime(printer, data);
-        AddTable(printer, data);
-        AddBuffet(printer, data);
-        AddBillNo(printer, data);
-        AddStaff(printer, data);
-        PM.DrawLine(printer);
-        AddBillItems(printer, data);
-        PM.CutPaper(printer);
-        PM.ClosePort(printer);
+        var instance = new PrintKitchen();
+        await instance.InitializePrinting(ptr, data.jsonData);
+        return instance;
     }
+
+    private async Task InitializePrinting(IntPtr ptr, dynamic data)
+    {
+        //IntPtr ptr = PM.GetPrinterConnection(ipAddress);
+        string jsonString = JsonSerializer.Serialize(data);
+        //var q = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
+
+        KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(jsonString);
+        await Print(ptr, model);
+    }
+
+    public async Task Print(IntPtr printer, KitchenModel data)
+    {
+        await Task.Run(async () =>
+        {
+            //MessageBox.Show("call start print");
+            PM.AlignCenter(printer);
+            AddKitchenTitle(printer, data);
+            PM.TextAlignLeft(printer);
+            AddOrderTime(printer, data);
+            AddTable(printer, data);
+            AddBuffet(printer, data);
+            AddBillNo(printer, data);
+            AddStaff(printer, data);
+            PM.DrawLine(printer);
+            AddBillItems(printer, data);
+            PM.CutPaper(printer);
+            //PM.ClosePort(printer);
+            await Task.Delay(300);
+        });
+    }
+
+    //public void Print(IntPtr printer, KitchenModel data)
+    //{
+    //    //MessageBox.Show($"call printing kitchen {data.orderer_name}");
+    //    PM.AlignCenter(printer);
+    //    AddKitchenTitle(printer, data);
+    //    PM.TextAlignLeft(printer);
+    //    AddOrderTime(printer, data);
+    //    AddTable(printer, data);
+    //    AddBuffet(printer, data);
+    //    AddBillNo(printer, data);
+    //    AddStaff(printer, data);
+    //    PM.DrawLine(printer);
+    //    AddBillItems(printer, data);
+    //    PM.CutPaper(printer);
+    //    PM.ClosePort(printer);
+    //}
 
     static void AddKitchenTitle(IntPtr printer, KitchenModel data)
     {
