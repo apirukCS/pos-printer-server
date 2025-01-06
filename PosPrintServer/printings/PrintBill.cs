@@ -8,78 +8,79 @@ using System.Text.Json;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using System.Collections.Generic;
 
 public class PrintBill
 {
-    public PrintBill(PrintingQueue data, string type)
+    //public PrintBill(PrintingQueue data, string type)
+    //{
+    //    foreach (Printer printer in data.printers)
+    //    {
+    //        if (string.IsNullOrEmpty(printer.ip_address)) continue;
+    //        IntPtr ptr = ESCPOS.InitPrinter("");
+    //        BillModel bill = GenerateMockBillData();
+
+    //    }
+    //}
+
+    public static async Task<PrintBill> Create(IntPtr ptr, PrintingQueue data, string type)
     {
-        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
+        var instance = new PrintBill();
+        await instance.InitializePrinting(ptr, data.jsonData, type);
+        return instance;
+    }
 
-        //Dictionary<string, JsonElement> json = GenerateMockBillData();
-        //List<Dictionary<string, object>> result = ParseData(json);
-        //string resultJson = System.Text.Json.JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
-        //WriteFile(resultJson);
-
-        //var l = result.Count;
-
-        //var receipt = result[0].receipt;
-        foreach (Printer printer in data.printers)
+    private async Task InitializePrinting(IntPtr ptr, dynamic data, string type)
+    {
+        string jsonString = JsonSerializer.Serialize(data);
+        BillModel bill = JsonSerializer.Deserialize<BillModel>(jsonString);
+        if (type == "bill")
         {
-            if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            IntPtr ptr = ESCPOS.InitPrinter("");
-            ////ToDo for each receipts
-            ////ToDo new modelfor one receipt
-            BillModel bill = GenerateMockBillData();
-            //var result = ParseData(bill);
-
-            //Dictionary<string, JsonElement> json = GenerateMockBillData();
-            //MessageBox.Show("nhnghnjgyjn");
-            //List<BillModel> result = ParseData(json);
-            //MessageBox.Show($"lenght {result.Count}");
-            if (type == "bill")
-            {
-                PrintingBill(ptr, bill, type);
-            }
-            else if (type == "receipt")
-            {
-                PrintingReceipt(ptr, bill, type);
-            }
+            await PrintingBill(ptr, bill, type);
         }
+        else if (type == "receipt")
+        {
+            await PrintingReceipt(ptr, bill, type);
+        }
+        //await Print(ptr, model);
     }
 
-    public async void PrintingBill(IntPtr printer, BillModel bill, string type)
+    public async Task PrintingBill(IntPtr printer, BillModel bill, string type)
     {
-        //MessageBox.Show("PrintingBill");
-        PM.AlignCenter(printer);
-        await AddLogo(printer, bill);
-        AddBillNo(printer, bill);
-        PM.TextAlignLeft(printer);
-        AddHeader(printer, bill);
-        AddBillItems(printer, bill);
-        AddPricing(printer, bill, type);
-        AddMembership(printer, bill);
-        AddFooterBill(printer, bill);
-        PM.CutPaper(printer);
+        await Task.Run(async () =>
+        {
+            PM.AlignCenter(printer);
+            await AddLogo(printer, bill);
+            AddBillNo(printer, bill);
+            PM.TextAlignLeft(printer);
+            AddHeader(printer, bill);
+            AddBillItems(printer, bill);
+            AddPricing(printer, bill, type);
+            AddMembership(printer, bill);
+            AddFooterBill(printer, bill);
+            PM.CutPaper(printer);
+            await Task.Delay(300);
+        });
     }
 
-    public async void PrintingReceipt(IntPtr printer, BillModel bill, string type)
+    public async Task PrintingReceipt(IntPtr printer, BillModel bill, string type)
     {
-        //MessageBox.Show("PrintingReceipt");
-        PM.AlignCenter(printer);
-        await AddLogo(printer, bill);
-        AddShopAddress(printer, bill);
-
-        AddTitle(printer, bill);
-        AddHeader(printer, bill);
-        AddBillItems(printer, bill);
-        AddPricing(printer, bill, type);
-        AddPayments(printer, bill);
-        AddMembership(printer, bill);
-        AddFooterBill(printer, bill);
-        PM.CutPaper(printer);
+        await Task.Run(async () =>
+        {
+            PM.AlignCenter(printer);
+            await AddLogo(printer, bill);
+            AddShopAddress(printer, bill);
+            AddTitle(printer, bill);
+            AddHeader(printer, bill);
+            AddBillItems(printer, bill);
+            AddPricing(printer, bill, type);
+            AddPayments(printer, bill);
+            AddMembership(printer, bill);
+            AddFooterBill(printer, bill);
+            PM.CutPaper(printer);
+            await Task.Delay(300);
+        });
     }
 
     static async Task AddLogo(IntPtr printer, BillModel bill)

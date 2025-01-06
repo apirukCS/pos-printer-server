@@ -133,7 +133,7 @@ public class PrintKitchen
             loc = $"{(data.language == "th" ? "โต๊ะ" : "Table")} {data.table_zone_name} {data.table_name}";
         }
 
-        if (!string.IsNullOrEmpty(loc))
+        if (!String.IsNullOrEmpty(loc))
         {
             PM.PrintTextBold(printer, loc);
         }
@@ -202,7 +202,10 @@ public class PrintKitchen
             // NOTE
             if (billItem.bill_item_notes?.Length > 0 || billItem.note != null)
             {
-                string text = string.Join(", ", billItem.bill_item_notes.Select(item => item.note_note));
+                //string text = string.Join(", ", billItem.bill_item_notes.Select(item => item.note_note));
+                var text = string.Join(", ", billItem.bill_item_notes
+                    .Select(item => item.note_note)
+                    .Concat(new[] { billItem.note }));
                 text = $"- {text}";
                 PM.PrintText(printer, text);
             }

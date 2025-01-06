@@ -13,52 +13,57 @@ using System.Collections.Generic;
 
 public class PrintReport
 {
-    public PrintReport()
+    //public PrintReport()
+    //{
+    //    IntPtr ptr = ESCPOS.InitPrinter("");
+    //    Report reportBill = GenerateMockBillData();
+    //    ExecutePrintReport(ptr, reportBill, "xxxx");
+    //    PM.NewLine(ptr);
+    //    PM.CutPaper(ptr);
+        //PM.ClosePort(ptr);
+    //}
+
+    public static async Task<PrintReport> Create(IntPtr ptr, Report data)
     {
-        //MessageBox.Show("ssssss");
-        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.70");
-        IntPtr ptr = ESCPOS.InitPrinter("");
-        Report reportBill = GenerateMockBillData();
-        ExecutePrintReport(ptr, reportBill, "xxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        //PM.PrintTextOnly(ptr, "xxxxxxxx");
-        PM.NewLine(ptr);
-        PM.CutPaper(ptr);
-        //MessageBox.Show($"{ptr}");
+        var instance = new PrintReport();
+        await instance.InitializePrinting(ptr, data);
+        return instance;
     }
 
-    public async void ExecutePrintReport(IntPtr printer, Report reportBill, string type)
+    private async Task InitializePrinting(IntPtr ptr, Report data)
     {
-        //MessageBox.Show($"{reportBill.shop}");
-        //MessageBox.Show($"{reportBill.shop}");
-        //MessageBox.Show($"ExecutePrintReport");
-        //Console.WriteLine($"Product Types: {reportBill}");
-        //Console.WriteLine("ExecutePrintReport");
+        //string jsonString = JsonSerializer.Serialize(data);
+        //Report model = JsonSerializer.Deserialize<Report>(jsonString);
+        //await Print(ptr, model);
+        ExecutePrintReport(ptr, data);
+        PM.NewLine(ptr);
+        PM.CutPaper(ptr);
+        PM.ClosePort(ptr);
+    }
 
-        PM.AlignCenter(printer);
-        await AddLogo(printer, reportBill);
-        AddShop(printer, reportBill);
-        PM.TextAlignLeft(printer);
-        AddHeader(printer, reportBill);
-        PM.DrawLine(printer);
-        AddProducts(printer, reportBill);
-        PM.DrawLine(printer);
-        AddPromotions(printer, reportBill);
-        PM.DrawLine(printer);
-        AddSales(printer, reportBill);
-        PM.DrawLine(printer);
-        AddPayments(printer, reportBill);
-        PM.DrawLine(printer);
-        AddBillings(printer, reportBill);
-        PM.CutPaper(printer);
-        PM.ClosePort(printer);
-        
+    public async void ExecutePrintReport(IntPtr printer, Report reportBill)
+    {
+        await Task.Run(async () =>
+        {
+            PM.AlignCenter(printer);
+            await AddLogo(printer, reportBill);
+            AddShop(printer, reportBill);
+            PM.TextAlignLeft(printer);
+            AddHeader(printer, reportBill);
+            PM.DrawLine(printer);
+            AddProducts(printer, reportBill);
+            PM.DrawLine(printer);
+            AddPromotions(printer, reportBill);
+            PM.DrawLine(printer);
+            AddSales(printer, reportBill);
+            PM.DrawLine(printer);
+            AddPayments(printer, reportBill);
+            PM.DrawLine(printer);
+            AddBillings(printer, reportBill);
+            PM.CutPaper(printer);
+            PM.ClosePort(printer);
+            Task.Delay(300);
+        });
     }
 
     static async Task AddLogo(IntPtr printer, Report reportBill)
