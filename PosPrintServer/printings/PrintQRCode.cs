@@ -37,60 +37,47 @@ public class PrintQRCode
 
     public async Task Print(IntPtr printer, QrCodeModel q)
     {
-        //MessageBox.Show($"data.jsonData {data.jsonData}");
-        //var options = new JsonSerializerOptions
-        //{
-        //    PropertyNameCaseInsensitive = true
-        //};
-        //string jsonString = JsonSerializer.Serialize(data.jsonData);
-        //var q = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
-
         await Task.Run(async () =>
         {
-            DateTimeHelper dateTimeHelper = new DateTimeHelper();
+                DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
-            string imageUrl = q.Shop.ImageUrl;
-            string qrcode = q.QrCode;
-            string table = $"{q.Bill.TableZoneName}{q.Bill.TableName}";
-            string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
-            string currentDate = dateTimeHelper.GetCurrentDate("th");
-            var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
-            string time = times.Length > 0 ? q.Language == "th"
-                ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
-                : $"Start time: {times[0]}:{times[1]}" : "";
+                string imageUrl = q.Shop.ImageUrl;
+                string qrcode = q.QrCode;
+                string table = $"{q.Bill.TableZoneName} {q.Bill.TableName}";
+                string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
+                string currentDate = dateTimeHelper.GetCurrentDate(q.Language ?? "th");
+                var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
+                string time = times.Length > 0 ? q.Language == "th"
+                    ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
+                    : $"Start time: {times[0]}:{times[1]}" : "";
 
-            //MessageBox.Show("sefjwiejdlqw");
 
-            PM.AlignCenter(printer);
-            //MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
-            if (!string.IsNullOrEmpty(imageUrl))
-            {
-                await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+                PM.AlignCenter(printer);
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+                    PM.NewLine(printer);
+                }
+
+                PM.PrintTextMediumBold(printer, table);
+                PM.PrintTextBold(printer, qrScan);
+                PM.LineSpace(printer, 40);
                 PM.NewLine(printer);
-            }
-            
-            PM.PrintTextMediumBold(printer, table);
-            PM.PrintTextBold(printer, qrScan);
-            PM.LineSpace(printer, 40);
-            PM.NewLine(printer);
-            PM.PrintTextBold(printer, currentDate);
-            PM.LineSpaceDefault(printer);
-            PM.NewLine(printer);
-            //start time
-            if (string.IsNullOrEmpty(time))
-            {
-                PM.PrintTextMediumBold(printer, time);
-            }
-            PM.NewLine(printer);
-            BuffetEndTime(printer, q);
-            BuffetName(printer, q);
-            
-            //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
-            PM.PrintSymbol(printer, qrcode);
-            PM.NewLine(printer);
-            PM.CutPaper(printer);
-            PM.ClosePort(printer);
-            await Task.Delay(300);
+                PM.PrintTextBold(printer, currentDate);
+                PM.LineSpaceDefault(printer);
+                PM.NewLine(printer);
+                if (!string.IsNullOrEmpty(time))
+                {
+                    PM.PrintTextMediumBold(printer, time);
+                }
+                PM.NewLine(printer);
+                BuffetEndTime(printer, q);
+                BuffetName(printer, q);
+                PM.PrintSymbol(printer, qrcode);
+                PM.NewLine(printer);
+                PM.CutPaper(printer);
+                PM.ClosePort(printer);
+                await Task.Delay(300);
         });
     }
 

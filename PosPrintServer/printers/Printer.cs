@@ -697,30 +697,36 @@ public class PrinterManager
 
     public static void PrintQueueNumber(IntPtr printer, int number)
     {
-        string path;
-        if (number < 10)
-        {
-            // หากตัวเลขมี 1 หลัก
-            path = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{number}.jpeg";
+        string folderPath = @"C:\pos-printer-server\numbers\";
+        try {
+            string path;
+            if (number < 10)
+            {
+                path = Path.Combine(folderPath, $"{number}.jpeg");
+            }
+            else if (number < 100)
+            {
+                string pathTens = Path.Combine(folderPath, $"{number / 10}.jpeg");
+                string pathOnes = Path.Combine(folderPath, $"{number % 10}.jpeg");
+                string combinedPath = Path.Combine(folderPath, "combined.jpeg");
+                ImageProcessor.MergeTwoImages(pathTens, pathOnes, combinedPath);
+                path = combinedPath;
+            }
+            else
+            {
+                string pathHundreds = Path.Combine(folderPath, $"{number / 100}.jpeg");
+                string pathTens = Path.Combine(folderPath, $"{(number % 100) / 10}.jpeg");
+                string pathOnes = Path.Combine(folderPath, $"{number % 10}.jpeg");
+                string combinedPath = Path.Combine(folderPath, "combined.jpeg");
+                ImageProcessor.MergeThreeImages(pathHundreds, pathTens, pathOnes, combinedPath);
+                path = combinedPath;
+            }
+            int s = ESCPOS.PrintImage(printer, path, 0);
         }
-        else if (number < 100)
-        {
-            string pathTens = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{number / 10}.jpeg";
-            string pathOnes = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{number % 10}.jpeg";
-            string combinedPath = @"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\combined.jpeg";
-            ImageProcessor.MergeTwoImages(pathTens, pathOnes, combinedPath);
-            path = combinedPath;
+        catch (Exception e) {
+            MessageBox.Show($"ee {e}");
+            WriteLog.Write($"ee {e}");
         }
-        else
-        {
-            string pathHundreds = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{number / 100}.jpeg";
-            string pathTens = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{(number % 100) / 10}.jpeg";
-            string pathOnes = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{number % 10}.jpeg";
-            string combinedPath = @"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\combined.jpeg";
-            ImageProcessor.MergeThreeImages(pathHundreds, pathTens, pathOnes, combinedPath);
-            path = combinedPath;
-        }
-        int s = ESCPOS.PrintImage(printer, path, 0);
     }
 
     public static void PrintImage(IntPtr printer, string path)

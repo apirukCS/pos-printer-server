@@ -9,28 +9,111 @@ using System.IO;
 
 public static class ImageProcessor
 {
-    public static async Task ProcessImageFromUrlAsync(string url, string outputPath,uint width = 200)
+    public static async Task ProcessImageFromUrlAsync(string url, string outputPath, uint width = 200)
     {
-        byte[] imageBytes = await DownloadImageFromUrlAsync(url);
-        //string p = "C:\\dotnet\\PosPrintServer\\PosPrintServer\\images\\numbers\\5.jpg";
-        //byte[] imageBytes = File.ReadAllBytes(p);
-        using (MagickImage image = new MagickImage(imageBytes))
+        try
         {
-            //image.Threshold(new Percentage(70));
-            image.Resize(new MagickGeometry(width, 0));
-            image.Quality = 60;
-            //image.Density = new Density(72, 72);
-            image.Write(outputPath, MagickFormat.Jpg);
+            byte[] imageBytes = await DownloadImageFromUrlAsync(url);
+
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                throw new Exception("No image data received");
+            }
+
+            // Create settings for reading the image
+            var settings = new MagickReadSettings
+            {
+                BackgroundColor = MagickColors.White, // Set white background
+                ColorSpace = ColorSpace.RGB        // Auto-detect format
+            };
+
+            using (var image = new MagickImage(imageBytes, settings))
+            {
+                // Debug information
+                Console.WriteLine($"Original format: {image.Format}");
+                Console.WriteLine($"Color space: {image.ColorSpace}");
+                Console.WriteLine($"Depth: {image.Depth}");
+                Console.WriteLine($"Original dimensions: {image.Width}x{image.Height}");
+
+                // Convert to RGB if not already
+                if (image.ColorSpace != ColorSpace.RGB)
+                {
+                    image.ColorSpace = ColorSpace.RGB;
+                }
+
+                // Ensure image has an alpha channel and flatten it
+                image.Alpha(AlphaOption.Remove);
+
+                // Adjust image properties
+                image.Format = MagickFormat.Jpg;
+                image.Quality = 90; // Increase quality
+
+                // Resize maintaining aspect ratio
+                var geometry = new MagickGeometry(width)
+                {
+                    IgnoreAspectRatio = false
+                };
+                image.Resize(geometry);
+
+                // Optional: Adjust brightness/contrast if needed
+                image.Contrast();    // -100 to 100
+
+                // Save with specific format
+                image.Write(outputPath);
+
+                // Verify the output file exists and has content
+                if (new FileInfo(outputPath).Length == 0)
+                {
+                    throw new Exception("Output file is empty");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error processing image: {ex.Message}");
         }
     }
 
+    //public static async Task ProcessImageFromUrlAsync(string url, string outputPath,uint width = 200)
+    //{
+    //    byte[] imageBytes = await DownloadImageFromUrlAsync(url);
+    //    //string p = "C:\\dotnet\\PosPrintServer\\PosPrintServer\\images\\numbers\\5.jpg";
+    //    //byte[] imageBytes = File.ReadAllBytes(p);
+    //    using (MagickImage image = new MagickImage(imageBytes))
+    //    {
+    //        //image.Threshold(new Percentage(70));
+    //        image.Resize(new MagickGeometry(width, 0));
+    //        image.Quality = 60;
+    //        //image.Density = new Density(72, 72);
+    //        image.Write(outputPath, MagickFormat.Jpg);
+    //    }
+    //}
+
     private static async Task<byte[]> DownloadImageFromUrlAsync(string url)
     {
-        using (HttpClient client = new HttpClient())
+        using (var client = new HttpClient())
         {
-            return await client.GetByteArrayAsync(url);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            try
+            {
+                var response = await client.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadAsByteArrayAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"Failed to download image: {ex.Message}");
+            }
         }
     }
+
+    //private static async Task<byte[]> DownloadImageFromUrlAsync(string url)
+    //{
+    //    using (HttpClient client = new HttpClient())
+    //    {
+    //        return await client.GetByteArrayAsync(url);
+    //    }
+    //}
 
     public static void MergeTwoImages(string imagePath1, string imagePath2, string outputPath)
     {
@@ -80,49 +163,4 @@ public static class ImageProcessor
             }
         }
     }
-
-    public static void GenerateNumberImages()
-    {
-        // ฟอนต์และขนาดที่ต้องการ
-        string fontName = "Kanit";
-        int fontSize = 70; // ปรับขนาดฟอนต์ให้เหมาะสม
-        int imageWidth = 90;
-        int imageHeight = 120;
-
-        // สร้างไฟล์ภาพสำหรับตัวเลข 1 ถึง 10
-        for (int i = 0; i < 10; i++)
-        {
-            using (Bitmap bitmap = new Bitmap(imageWidth, imageHeight))
-            using (Graphics g = Graphics.FromImage(bitmap))
-            {
-                // ตั้งค่า background และคุณภาพของการวาด
-                g.Clear(Color.White);
-                g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-
-                // ตั้งค่า font style
-                using (Font font = new Font(fontName, fontSize, FontStyle.Bold))
-                {
-                    // จัดข้อความให้อยู่กึ่งกลางแนวนอนและเลื่อนลงด้านล่าง
-                    StringFormat format = new StringFormat();
-                    format.Alignment = StringAlignment.Center;
-                    format.LineAlignment = StringAlignment.Near;
-
-                    // คำนวณตำแหน่งสำหรับวาดตัวเลขที่ลดขอบบน
-                    Rectangle rect = new Rectangle(0, -20, imageWidth, imageHeight + 20); // ลดขอบบนด้วยการเพิ่มระยะ Y
-
-                    // วาดตัวเลขลงในรูปภาพ
-                    g.DrawString(i.ToString(), font, Brushes.Black, rect, format);
-                }
-
-                // สร้างชื่อไฟล์ (เช่น 1.jpeg, 2.jpeg, ...)
-                string fileName = $@"C:\dotnet\PosPrintServer\PosPrintServer\images\numbers\{i}.jpeg"; // แก้ไข path ตามที่ต้องการ
-
-                // บันทึกเป็นไฟล์ JPEG
-                bitmap.Save(fileName, System.Drawing.Imaging.ImageFormat.Jpeg);
-            }
-        }
-
-        Console.WriteLine("Number images generated successfully!");
-    }
-
 }

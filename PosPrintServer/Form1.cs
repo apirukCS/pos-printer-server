@@ -22,6 +22,7 @@ namespace PosPrintServer
             InitializeComponent();
             GetPrinters();
             ConnectSocket();
+            GenerateNumber.create();
             //new PrintQRCode(null);/
             //new PrintKitchen(null);/vvhh,dveeด
 
@@ -151,27 +152,9 @@ namespace PosPrintServer
             }
         }
 
-        //static void DataPrintingQueue(SocketIOResponse data)
-        //{
-        //    try
-        //    {
-        //        string jsonData = data.ToString();
-        //        var parsedData = JsonSerializer.Deserialize<PrintingQueue[]>(jsonData);
-        //        //***จัดกลุ่มข้อมูล parsedData ข้อมูลที่จะได้คือ กลุ่มเครื่องปริ้น ตัวอย่างข้อมูลที่จะได้คือ 
-        //        //*** [{'ip_address':'192.123.12.1',[{parsedData[...].jsonData},{parsedData[...].jsonData}]}]
-
-        //    }
-        //    catch (JsonException ex)
-        //    {
-        //        MessageBox.Show($"Failed to parse JSON: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //    }
-        //}
-
         public static async Task KitchenPrint(IntPtr ptr, PrintingQueue item)
         {
-            //MessageBox.Show("calll kitjjj");
             if (ptr != null) {
-                //var printer = new PrintKitchen(ptr, item);
                 var printer = await PrintKitchen.Create(ptr, item);
                 GC.KeepAlive(printer);
             }
@@ -179,38 +162,34 @@ namespace PosPrintServer
 
         static async Task QrCodePrint(IntPtr ptr, QrCodeModel item)
         {
-            //MessageBox.Show("qr code print");
-            //Thread.Sleep(100);
-            //var qrCode = new PrintQRCode(ptr ,item);
             var qrCode = await PrintQRCode.Create(ptr, item);
             GC.KeepAlive(qrCode);
         }
 
-        static void PrebillPrint(PrintingQueue item)
+        static async Task PrebillPrint(IntPtr ptr, PrintingQueue item)
         {
-            //Thread.Sleep(100);
-            var bill = new PrintBill(item, "bill");
+            var bill = await PrintBill.Create(ptr ,item, "bill");
             GC.KeepAlive(bill);
         }
 
-        static void QueuePrint(PrintingQueue item)
+        static void QueuePrint(IntPtr ptr, QueueModel item)
         {
             //Thread.Sleep(100);
             //MessageBox.Show("q print");
-            var q = new PrintQueue(item);
+            var q = PrintQueue.Create(ptr ,item);
             GC.KeepAlive(q);
         }
 
-        static void ReceiptPrint(PrintingQueue item)
+        static async Task ReceiptPrint(IntPtr ptr, PrintingQueue item)
         {
-            //Thread.Sleep(100);
-            var receipt = new PrintBill(item, "receipt");
+            var receipt = await PrintBill.Create(ptr ,item, "receipt");
             GC.KeepAlive(receipt);
         }
 
-        static void SalesReportsDailySummaryPrint(PrintingQueue item)
+        static async void SalesReportsDailySummaryPrint(IntPtr ptr, Report item)
         {
-
+            var report = await PrintReport.Create(ptr, item);
+            GC.KeepAlive(report);
         }
 
         //section test
@@ -435,44 +414,44 @@ namespace PosPrintServer
                         //WriteLog.Write($"success {jsonData}");
                     }
 
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+                    var itemDict = (Dictionary<string, object>)jsonData;
+                    string jsonString = JsonSerializer.Serialize(itemDict);
+
+                    //var itemDict = (Dictionary<string, object>)jsonData;
+                    var item = new PrintingQueue
+                    {
+                        jsonData = itemDict,
+                    };
+
                     switch (printingType)
                     {
                         case "kitchen":
-                            var itemDict = (Dictionary<string, object>)jsonData;
-
-                            var item = new PrintingQueue
-                            {
-                                jsonData = itemDict,
-                            };
-                            await KitchenPrint(ptr, item); //
+                            await KitchenPrint(ptr, item);
                             break;
                         case "qr-code":
-                               
-                            var options = new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true,
-                                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                            };
-                            var t = (Dictionary<string, object>)jsonData;
-                            string jsonString = JsonSerializer.Serialize(t);
-
-                            var i = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
-                            await QrCodePrint(ptr, i); //
-
+                            var qr = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
+                            await QrCodePrint(ptr, qr);
                             break;
-                        //case "pre-bill":
-                        //    PrebillPrint(item);
-                        //    break;
-                        //case "queues":
-                        //    QueuePrint(item); //
-                        //    break;
+                        case "pre-bill":
+                            await PrebillPrint(ptr ,item);
+                            break;
+                        case "queues":
+                            var queue = JsonSerializer.Deserialize<QueueModel>(jsonString, options);
+                            QueuePrint(ptr, queue);
+                            break;
                         //case "receipt":
                         //    ReceiptPrint(item);
                         //    break;
-                        //case "sales_reports-daily_summary":
-                        //    // WriteFile($"{item.jsonData}");
-                        //    SalesReportsDailySummaryPrint(item);
-                        //    break;
+                        case "sales_reports-daily_summary":
+                            // WriteFile($"{item.jsonData}");
+                            var report = JsonSerializer.Deserialize<Report>(jsonString);
+                            //SalesReportsDailySummaryPrint(ptr, report);
+                            break;
                         default:
                             MessageBox.Show("PrintingType invalid");
                             break;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Text.Json;
 using PrintingModel;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -7,43 +8,46 @@ using PM = PrinterManager;
 
 public class PrintQueue
 {
-    public PrintQueue(PrintingQueue data) {
-        MessageBox.Show($"data {data}");
-        foreach (Printer printer in data.printers)
-        {
-            if (string.IsNullOrEmpty(printer.ip_address)) continue;
-            //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-            IntPtr ptr = ESCPOS.InitPrinter("");
-            MessageBox.Show($"data {data}");
-            Print(ptr, data);
-        }
-        //IntPtr ptr = PM.GetPrinterConnection("192.168.1.205");
-        //Print(ptr, data);
+    public static async Task<PrintQueue> Create(IntPtr ptr, QueueModel data)
+    {
+        var instance = new PrintQueue();
+        await instance.InitializePrinting(ptr, data);
+        return instance;
     }
 
-    public async void Print(IntPtr printer, PrintingQueue data)
+    private async Task InitializePrinting(IntPtr ptr, QueueModel data)
     {
-        string mockupJson = QueueModel.CreateMockupData();
-        QueueModel q = QueueModel.FromJson(mockupJson);
-        DateTimeHelper dateTimeHelper = new DateTimeHelper();
+        await Print(ptr, data);
+    }
 
-        string imageUrl = q.ShopQ?.ImageUrl ?? "";
-        string date = q.CrrentDate ?? dateTimeHelper.GetCurrentDate("th");
-        int qNo = q.Queue?.QueueNo ?? 0;
-        int customerAmount = q.Queue?.CustomerAmount ?? 0;
-        int waitQCount = q.Queue?.WaitQueueCount ?? 0;
+    public async Task Print(IntPtr printer, QueueModel q)
+    {
+        await Task.Run(async () =>
+        {
+            DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
-        PM.AlignCenter(printer);
-        await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
-        PM.PrintTextBold(printer, "ยินดีต้อนรับ");
-        PM.NewLine(printer);
-        PM.PrintQueueNumber(printer, qNo);
-        PM.NewLine(printer);
-        PM.PrintTextBold(printer, $"จํานวนลูกค้า {customerAmount} คน");
-        PM.PrintTextBold(printer, $"จํานวนคิวที่รอ {waitQCount} คิว");
-        PM.NewLine(printer);
-        PM.PrintTextBold(printer, date);
-        PM.CutPaper(printer);
+            string imageUrl = q.shop?.image_url ?? "";
+            string date = dateTimeHelper.GetCurrentDate("th");
+            int qNo = q.queue.queue_no ?? 0;
+            int customerAmount = q.queue.customer_amount ?? 0;
+            int waitQCount = q.queue.wait_queue_count ?? 0;
+
+            PM.AlignCenter(printer);
+            if (!string.IsNullOrEmpty(imageUrl)) {
+                await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+            }
+            PM.PrintTextBold(printer, "ยินดีต้อนรับ");
+            PM.NewLine(printer);
+            PM.PrintQueueNumber(printer, qNo);
+            PM.NewLine(printer);
+            PM.PrintTextBold(printer, $"จํานวนลูกค้า {customerAmount} คน");
+            PM.PrintTextBold(printer, $"จํานวนคิวที่รอ {waitQCount} คิว");
+            PM.NewLine(printer);
+            PM.PrintTextBold(printer, date);
+            PM.CutPaper(printer);
+            PM.ClosePort(printer);
+            await Task.Delay(300);
+        });
     }
 
     static void WriteFile(string jsonString)
