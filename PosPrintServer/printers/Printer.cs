@@ -10,49 +10,49 @@ public class PrinterManager
 
     public static IntPtr GetPrinterConnection(string ipAddress)
     {
-        //IntPtr printer = ESCPOS.InitPrinter("");
-        //int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        IntPtr printer = ESCPOS.InitPrinter("");
+        int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
         //if (s != 0)
         //{
         //    return null;
         //}
-        ////connectedPrinters[ipAddress] = printer;
-        //return printer;
+        //connectedPrinters[ipAddress] = printer;
+        return printer;
 
-        if (connectedPrinters.ContainsKey(ipAddress))
-        {
-            //return connectedPrinters[ipAddress];
-            
-            IntPtr printer = ESCPOS.InitPrinter("");
-            int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-            ESCPOS.ClosePort(printer);
-            ESCPOS.ReleasePrinter(printer);
+        //if (connectedPrinters.ContainsKey(ipAddress))
+        //{
+        //    //return connectedPrinters[ipAddress];
 
-            s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //    IntPtr printer = ESCPOS.InitPrinter("");
+        //    int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //    ESCPOS.ClosePort(printer);
+        //    ESCPOS.ReleasePrinter(printer);
 
-            while (s != 0)
-            {
-                s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-                Thread.Sleep(500);
+        //    s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
 
-                // MessageBox.Show($"ss {s}");
-            }
+        //    while (s != 0)
+        //    {
+        //        s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //        Thread.Sleep(500);
 
-            connectedPrinters[ipAddress] = printer;
-            return printer;
-        }
-        else
-        {
-            IntPtr printer = ESCPOS.InitPrinter("");
-            int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
-            connectedPrinters[ipAddress] = printer;
-            return printer;
-        }
+        //        // MessageBox.Show($"ss {s}");
+        //    }
+
+        //    connectedPrinters[ipAddress] = printer;
+        //    return printer;
+        //}
+        //else
+        //{
+        //    IntPtr printer = ESCPOS.InitPrinter("");
+        //    int s = ESCPOS.OpenPort(printer, $"NET,{ipAddress}");
+        //    connectedPrinters[ipAddress] = printer;
+        //    return printer;
+        //}
     }
 
-    public static void PrintSymbol(IntPtr printer, string data)
+    public static void PrintSymbol(IntPtr printer, string? data)
     {
-        ESCPOS.PrintSymbol(printer, 49, data, 48, 10, 10, 1);
+        ESCPOS.PrintSymbol(printer, 49, data ?? "", 48, 10, 10, 1);
         //PrintSymbol(printer, 49, test, 48, 10, 10, 1);
         NewLine(printer);
     }

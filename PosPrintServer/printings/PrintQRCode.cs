@@ -4,69 +4,94 @@ using System.Text.Json;
 
 public class PrintQRCode
 {
-    public PrintQRCode(IntPtr ptr, PrintingQueue data)
+    //public PrintQRCode(IntPtr ptr, PrintingQueue data)
+    //{
+    //    //foreach (Printer printer in data.printers)
+    //    //{
+    //    //    WriteFile($"data {data.jsonData}");
+    //    //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
+    //    //    //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
+    //    //    IntPtr ptr = ESCPOS.InitPrinter("");
+    //    //    Print(ptr, data);
+    //    //}
+    //    Print(ptr, data);
+    //}
+
+    public static async Task<PrintQRCode> Create(IntPtr ptr, QrCodeModel data)
     {
-        //foreach (Printer printer in data.printers)
-        //{
-        //    WriteFile($"data {data.jsonData}");
-        //    if (string.IsNullOrEmpty(printer.ip_address)) continue;
-        //    //IntPtr ptr = PM.GetPrinterConnection(printer.ip_address);
-        //    IntPtr ptr = ESCPOS.InitPrinter("");
-        //    Print(ptr, data);
-        //}
-        Print(ptr, data);
+        var instance = new PrintQRCode();
+        await instance.InitializePrinting(ptr, data);
+        return instance;
     }
 
-    public async void Print(IntPtr printer, PrintingQueue data)
+    private async Task InitializePrinting(IntPtr ptr, QrCodeModel data)
+    {
+        //var options = new JsonSerializerOptions
+        //{
+        //    PropertyNameCaseInsensitive = true
+        //};
+        ////string jsonString = JsonSerializer.Serialize(data);
+        //QrCodeModel model = JsonSerializer.Deserialize<QrCodeModel>(data);
+        await Print(ptr, data);
+    }
+
+    public async Task Print(IntPtr printer, QrCodeModel q)
     {
         //MessageBox.Show($"data.jsonData {data.jsonData}");
-        var options = new JsonSerializerOptions
+        //var options = new JsonSerializerOptions
+        //{
+        //    PropertyNameCaseInsensitive = true
+        //};
+        //string jsonString = JsonSerializer.Serialize(data.jsonData);
+        //var q = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
+
+        await Task.Run(async () =>
         {
-            PropertyNameCaseInsensitive = true
-        };
-        string jsonString = JsonSerializer.Serialize(data.jsonData);
-        var q = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
+            DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
-        DateTimeHelper dateTimeHelper = new DateTimeHelper();
+            string imageUrl = q.Shop.ImageUrl;
+            string qrcode = q.QrCode;
+            string table = $"{q.Bill.TableZoneName}{q.Bill.TableName}";
+            string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
+            string currentDate = dateTimeHelper.GetCurrentDate("th");
+            var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
+            string time = times.Length > 0 ? q.Language == "th"
+                ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
+                : $"Start time: {times[0]}:{times[1]}" : "";
 
-        string imageUrl = q.Shop.ImageUrl;
-        string qrcode = q.QrCode;
-        string table = $"{q.Bill.TableZoneName}{q.Bill.TableName}";
-        string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
-        string currentDate = dateTimeHelper.GetCurrentDate("th");
-        var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
-        string time = times.Length > 0 ? q.Language == "th"
-            ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
-            : $"Start time: {times[0]}:{times[1]}" : "";
+            //MessageBox.Show("sefjwiejdlqw");
 
-        //MessageBox.Show("sefjwiejdlqw");
-
-        PM.AlignCenter(printer);
-        //MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
-        if (!string.IsNullOrEmpty(imageUrl)) {
-            await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
-        }
-        PM.NewLine(printer);
-        PM.PrintTextMediumBold(printer, table);
-        PM.PrintTextBold(printer, qrScan);
-        PM.LineSpace(printer, 40);
-        PM.NewLine(printer);
-        PM.PrintTextBold(printer, currentDate);
-        PM.LineSpaceDefault(printer);
-        PM.NewLine(printer);
-        //start time
-        if (string.IsNullOrEmpty(time)) {
-            PM.PrintTextMediumBold(printer, time);
-        }
-        PM.NewLine(printer);
-        BuffetEndTime(printer, q);
-        PM.NewLine(printer);
-        BuffetName(printer, q);
-        PM.NewLine(printer);
-        //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
-        PM.PrintSymbol(printer, qrcode);
-        PM.NewLine(printer);
-        PM.CutPaper(printer);
+            PM.AlignCenter(printer);
+            //MessageBox.Show($"chak {!string.IsNullOrEmpty(imageUrl)} ::: {imageUrl}");
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+                PM.NewLine(printer);
+            }
+            
+            PM.PrintTextMediumBold(printer, table);
+            PM.PrintTextBold(printer, qrScan);
+            PM.LineSpace(printer, 40);
+            PM.NewLine(printer);
+            PM.PrintTextBold(printer, currentDate);
+            PM.LineSpaceDefault(printer);
+            PM.NewLine(printer);
+            //start time
+            if (string.IsNullOrEmpty(time))
+            {
+                PM.PrintTextMediumBold(printer, time);
+            }
+            PM.NewLine(printer);
+            BuffetEndTime(printer, q);
+            BuffetName(printer, q);
+            
+            //await PM.PrintImageUrl(printer, qrcode, "logo.jpg", 260);
+            PM.PrintSymbol(printer, qrcode);
+            PM.NewLine(printer);
+            PM.CutPaper(printer);
+            PM.ClosePort(printer);
+            await Task.Delay(300);
+        });
     }
 
     static void BuffetEndTime(IntPtr printer,QrCodeModel data) {
@@ -86,12 +111,14 @@ public class PrintQRCode
                 : "End time: No time limit";
         }
         PM.PrintTextMediumBold(printer, time);
+        PM.NewLine(printer);
     }
 
     static void BuffetName(IntPtr printer, QrCodeModel data) {
-        if (string.IsNullOrEmpty(data.Bill.BuffetName)) return;
-        string name = data.Bill.BuffetName;
+        if (string.IsNullOrEmpty(data.Bill.BuffetNames)) return;
+        string name = data.Bill.BuffetNames;
         PM.PrintTextBold(printer, name);
+        PM.NewLine(printer);
     }
 
     static void WriteFile(string jsonString)
