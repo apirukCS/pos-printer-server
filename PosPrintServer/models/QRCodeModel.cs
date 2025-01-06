@@ -1,98 +1,67 @@
-namespace PrintingModel
+using System.Text.Json.Serialization;
+
+public class QrCodeModel
 {
-    using System;
-    using System.Collections.Generic;
+    [JsonPropertyName("shop")]
+    public ShopInFo Shop { get; set; }
 
-    using System.Globalization;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
+    [JsonPropertyName("bill")]
+    public BillInfo Bill { get; set; }
 
-    public partial class QrCodeModel
-    {
-        [JsonProperty("shop", NullValueHandling = NullValueHandling.Ignore)]
-        public Shop Shop { get; set; }
+    [JsonPropertyName("qr_code")]
+    public string QrCode { get; set; }
 
-        [JsonProperty("bill", NullValueHandling = NullValueHandling.Ignore)]
-        public Bill Bill { get; set; }
+    [JsonPropertyName("pos_printers")]
+    public List<PosPrinter> PosPrinters { get; set; }
 
-        [JsonProperty("crrent_date", NullValueHandling = NullValueHandling.Ignore)]
-        public string CrrentDate { get; set; }
+    [JsonPropertyName("generate_only")]
+    public bool? GenerateOnly { get; set; }
 
-        [JsonProperty("qr_code", NullValueHandling = NullValueHandling.Ignore)]
-        public string QrCode { get; set; }
+    [JsonPropertyName("bill_id")]
+    public int BillId { get; set; }
 
-        [JsonProperty("language", NullValueHandling = NullValueHandling.Ignore)]
-        public string Language { get; set; }
-    }
+    [JsonPropertyName("language")]
+    public string Language { get; set; }
 
-    public partial class Bill
-    {
-        [JsonProperty("is_buffet", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? IsBuffet { get; set; }
+    [JsonPropertyName("printing_type")]
+    public string PrintingType { get; set; }
+}
 
-        [JsonProperty("table_zone_name", NullValueHandling = NullValueHandling.Ignore)]
-        public string TableZoneName { get; set; }
+public class ShopInFo
+{
+    [JsonPropertyName("image_url")]
+    public string ImageUrl { get; set; }
+}
 
-        [JsonProperty("table_name", NullValueHandling = NullValueHandling.Ignore)]
-        public string TableName { get; set; }
+public class BillInfo
+{
+    [JsonPropertyName("table_zone_name")]
+    public string TableZoneName { get; set; }
 
-        [JsonProperty("open_date", NullValueHandling = NullValueHandling.Ignore)]
-        public string OpenDate { get; set; }
+    [JsonPropertyName("table_name")]
+    public string TableName { get; set; }
 
-        [JsonProperty("open_time", NullValueHandling = NullValueHandling.Ignore)]
-        public string OpenTime { get; set; }
+    [JsonPropertyName("open_time")]
+    public string OpenTime { get; set; }
 
-        [JsonProperty("buffet_category_has_time_limit", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? BuffetCategoryHasTimeLimit { get; set; }
+    [JsonPropertyName("buffet_category_has_time_limit")]
+    public bool? BuffetCategoryHasTimeLimit { get; set; }
 
-        [JsonProperty("buffet_end_time", NullValueHandling = NullValueHandling.Ignore)]
-        public string BuffetEndTime { get; set; }
+    [JsonPropertyName("buffet_end_time")]
+    public string BuffetEndTime { get; set; }
 
-        [JsonProperty("bill_items", NullValueHandling = NullValueHandling.Ignore)]
-        public BillItem[] BillItems { get; set; }
+    [JsonPropertyName("buffet_names")]
+    public string BuffetNames { get; set; }
 
-        [JsonProperty("buffet_name", NullValueHandling = NullValueHandling.Ignore)]
-        public string BuffetName { get; set; }
-    }
+    [JsonPropertyName("is_buffet")]
+    public bool? IsBuffet { get; set; }
+}
 
-    public partial class BillItem
-    {
-        [JsonProperty("product_name", NullValueHandling = NullValueHandling.Ignore)]
-        public string ProductName { get; set; }
+public class PosPrinter
+{
+    [JsonPropertyName("printer_id")]
+    public int PrinterId { get; set; }
 
-        [JsonProperty("amount", NullValueHandling = NullValueHandling.Ignore)]
-        public long? Amount { get; set; }
-
-        [JsonProperty("product_is_buffet", NullValueHandling = NullValueHandling.Ignore)]
-        public bool? ProductIsBuffet { get; set; }
-    }
-
-    public partial class Shop
-    {
-        [JsonProperty("image_url", NullValueHandling = NullValueHandling.Ignore)]
-        public string ImageUrl { get; set; }
-    }
-
-    public partial class QrCodeModel
-    {
-        public static QrCodeModel FromJson(string json) => JsonConvert.DeserializeObject<QrCodeModel>(json, Converter.Settings);
-    }
-
-    public static class Serialize
-    {
-        public static string ToJson(this QrCodeModel self) => JsonConvert.SerializeObject(self, Converter.Settings);
-    }
-
-    internal static class Converter
-    {
-        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
-        {
-            MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
-            DateParseHandling = DateParseHandling.None,
-            Converters =
-            {
-                new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
-            },
-        };
-    }
+    [JsonPropertyName("print_type")]
+    public string PrintType { get; set; }
 }

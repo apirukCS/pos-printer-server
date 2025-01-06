@@ -177,11 +177,12 @@ namespace PosPrintServer
             }
         }
 
-        static void QrCodePrint(IntPtr ptr, PrintingQueue item)
+        static async Task QrCodePrint(IntPtr ptr, QrCodeModel item)
         {
             //MessageBox.Show("qr code print");
             //Thread.Sleep(100);
-            var qrCode = new PrintQRCode(ptr ,item);
+            //var qrCode = new PrintQRCode(ptr ,item);
+            var qrCode = await PrintQRCode.Create(ptr, item);
             GC.KeepAlive(qrCode);
         }
 
@@ -354,11 +355,12 @@ namespace PosPrintServer
                     if (dataToPrint.Any())
                     {
                         //WriteLog.Write($"call print receipt");
-                        var tasks = dataToPrint.Select(data => (Task)PrintDataAsync(data.IpAddress, data.JsonData));
-                        await Task.WhenAll(tasks);
-                        //for (int i = 0; i < dataToPrint.Count; i++) {
-                        //    await PrintDataAsync(dataToPrint[i].IpAddress, dataToPrint[i].JsonData);
-                        //}
+                        //var tasks = dataToPrint.Select(data => (Task)PrintDataAsync(data.IpAddress, data.JsonData));
+                        //await Task.WhenAll(tasks);
+                        for (int i = 0; i < dataToPrint.Count; i++)
+                        {
+                            await PrintDataAsync(dataToPrint[i].IpAddress, dataToPrint[i].JsonData);
+                        }
                     }
 
                     if (!groupedDataStore.Any(group => group.JsonDataList.Any()))
@@ -371,7 +373,7 @@ namespace PosPrintServer
                 printTimer.Start();
             }
             catch (Exception ex) {
-                MessageBox.Show("เกิดข้อผิดพลาด StartPrintingProcess");
+                //MessageBox.Show("เกิดข้อผิดพลาด StartPrintingProcess");
             }
         }
 
@@ -411,11 +413,7 @@ namespace PosPrintServer
                 await Task.Run(async () =>
                 {
                     string printingType = jsonData["printing_type"];
-                    var itemDict = (Dictionary<string, object>)jsonData;
-                    var item = new PrintingQueue
-                    {
-                        jsonData = itemDict,
-                    };
+                    
 
                     //IntPtr? ptr = PM.GetPrinterConnection(ipAddress);
                     IntPtr ptr = ESCPOS.InitPrinter("");
@@ -440,24 +438,41 @@ namespace PosPrintServer
                     switch (printingType)
                     {
                         case "kitchen":
+                            var itemDict = (Dictionary<string, object>)jsonData;
+
+                            var item = new PrintingQueue
+                            {
+                                jsonData = itemDict,
+                            };
                             await KitchenPrint(ptr, item); //
                             break;
                         case "qr-code":
-                            QrCodePrint(ptr ,item); //
+                               
+                            var options = new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true,
+                                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                            };
+                            var t = (Dictionary<string, object>)jsonData;
+                            string jsonString = JsonSerializer.Serialize(t);
+
+                            var i = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
+                            await QrCodePrint(ptr, i); //
+
                             break;
-                        case "pre-bill":
-                            PrebillPrint(item);
-                            break;
-                        case "queues":
-                            QueuePrint(item); //
-                            break;
-                        case "receipt":
-                            ReceiptPrint(item);
-                            break;
-                        case "sales_reports-daily_summary":
-                            // WriteFile($"{item.jsonData}");
-                            SalesReportsDailySummaryPrint(item);
-                            break;
+                        //case "pre-bill":
+                        //    PrebillPrint(item);
+                        //    break;
+                        //case "queues":
+                        //    QueuePrint(item); //
+                        //    break;
+                        //case "receipt":
+                        //    ReceiptPrint(item);
+                        //    break;
+                        //case "sales_reports-daily_summary":
+                        //    // WriteFile($"{item.jsonData}");
+                        //    SalesReportsDailySummaryPrint(item);
+                        //    break;
                         default:
                             MessageBox.Show("PrintingType invalid");
                             break;
@@ -468,7 +483,7 @@ namespace PosPrintServer
             }
             catch (Exception e) {
                 //WriteLog.Write($"err {e}");
-                MessageBox.Show($"เกิดข้อผิดพลาด PrintDataAsync {e}");
+                //MessageBox.Show($"เกิดข้อผิดพลาด PrintDataAsync {e}");
             }
             // finally
             // {
