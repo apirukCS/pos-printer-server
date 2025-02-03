@@ -29,7 +29,8 @@ public partial class BillItem
     //public string? product_item_name { get; set; }
     public string? product_item_code { get; set; }
     //public int? receipt_item_id { get; set; }
-    //public int? receipt_id { get; set; }
+    public int? receipt_id { get; set; }
+    public int? invoice_id { get; set; }
     public bool? product_is_has_option { get; set; }
     //public int? product_sub_category_product_id { get; set; }
     //public bool? product_is_show_in_receipt { get; set; }

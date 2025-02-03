@@ -11,6 +11,9 @@ namespace PrintingModel
         public string? imgData { get; set; }
         public string? imgKey { get; set; }
         public dynamic jsonData { get; set;  }
+        public bool? cashdraw { get; set; }
+
+        public string? language { get; set; }
 
         public override string ToString()
         {

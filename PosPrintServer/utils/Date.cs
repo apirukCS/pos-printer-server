@@ -8,65 +8,70 @@ public class DateTimeHelper
 
     public DateTimeHelper()
     {
-        // กำหนด CultureInfo สำหรับไทยและภาษาอังกฤษ
         thaiCulture = new CultureInfo("th-TH");
         thaiCulture.DateTimeFormat.Calendar = new ThaiBuddhistCalendar(); // ใช้ปฏิทินไทย
 
         englishCulture = new CultureInfo("en-US");
     }
 
-    // ฟังก์ชันที่คืนวันที่ปัจจุบันในรูปแบบ "dd MMMM yyyy" ตามภาษาที่ระบุ
-    public string GetCurrentDate(string language)
+    public string GetCurrentDate(string language,bool isNumber = false)
     {
         DateTime currentDate = DateTime.Now;
-        return FormatDate(currentDate, language);
+        return FormatDate(currentDate, language, isNumber);
     }
 
-    // ฟังก์ชันที่คืนวันที่ที่กำหนดในรูปแบบ "dd MMMM yyyy" ตามภาษาที่ระบุ
     public string GetFormattedDate(DateTime date, string language)
     {
         return FormatDate(date, language);
     }
 
-    // ฟังก์ชันที่คืนวันที่และเวลาในรูปแบบ "dd MMMM yyyy HH:mm:ss" ตามภาษาที่ระบุ
     public string GetCurrentDateTime(string language)
     {
         DateTime currentDate = DateTime.Now;
         return $"{FormatDate(currentDate, language)} {FormatTime(currentDate, language)}";
     }
 
-    // ฟังก์ชันภายในเพื่อจัดรูปแบบวันที่ตามภาษา
-    private string FormatDate(DateTime date, string language)
+    private string FormatDate(DateTime date, string language, bool isNumber = false)
     {
-        if (language == "th")
-        {
-            return date.ToString("dd MMMM yyyy", thaiCulture);
+        if (isNumber) {
+            CultureInfo thaiCulture = new CultureInfo(language == "en" ? "en-US" : "th-TH");
+            var d = date.ToString("d/M/yyyy", thaiCulture);
+            return d;
         }
-        else if (language == "en")
+        
+        if (language == "en")
         {
             return date.ToString("dd MMMM yyyy", englishCulture);
         }
         else
         {
-            throw new ArgumentException("Invalid language specified. Use 'th' or 'en'.");
+            return date.ToString("dd MMMM yyyy", thaiCulture);
         }
     }
 
     private string FormatTime(DateTime dateTime, string language)
     {
-        if (language == "th")
+        
+        if (language == "en")
         {
-            // เพิ่มคำว่า "เวลา" ก่อนเวลาในภาษาไทย
-            return "เวลา " + dateTime.ToString("HH:mm", thaiCulture) + " น.";
-        }
-        else if (language == "en")
-        {
-            // เพิ่มคำว่า "Time" ก่อนเวลาในภาษาอังกฤษ
-            return "Time " + dateTime.ToString("HH:mm", englishCulture);
+            return "at " + dateTime.ToString("hh:mm tt", englishCulture);
         }
         else
         {
-            throw new ArgumentException("Invalid language specified. Use 'th' or 'en'.");
+            return "เวลา " + dateTime.ToString("HH:mm", thaiCulture) + " น.";
+        }
+    }
+
+    public string GetMonthName(int month, string language)
+    {
+        var date = new DateTime(DateTime.Now.Year, month, 1);
+        if (language == "en")
+        {
+            return date.ToString("MMMM", englishCulture);
+        }
+        else
+        {
+            return date.ToString("MMMM", thaiCulture);
         }
     }
 }

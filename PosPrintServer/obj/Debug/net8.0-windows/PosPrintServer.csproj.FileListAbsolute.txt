@@ -31,3 +31,5 @@ C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows\runtimes\win-ar
 C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows\runtimes\win-x64\native\Magick.Native-Q8-x64.dll
 C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows\runtimes\win-x86\native\Magick.Native-Q8-x86.dll
 C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows\Newtonsoft.Json.dll
+C:\dotnet\PosPrintServer\PosPrintServer\obj\Debug\net8.0-windows\PosPrintServer.sourcelink.json
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Debug\net8.0-windows\PosPrintServer.dll.config

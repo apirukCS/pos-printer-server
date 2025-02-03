@@ -20,52 +20,30 @@ public static class ImageProcessor
                 throw new Exception("No image data received");
             }
 
-            // Create settings for reading the image
             var settings = new MagickReadSettings
             {
-                BackgroundColor = MagickColors.White, // Set white background
-                ColorSpace = ColorSpace.RGB        // Auto-detect format
+                BackgroundColor = MagickColors.White,
+                ColorSpace = ColorSpace.RGB
             };
 
             using (var image = new MagickImage(imageBytes, settings))
             {
-                // Debug information
-                Console.WriteLine($"Original format: {image.Format}");
-                Console.WriteLine($"Color space: {image.ColorSpace}");
-                Console.WriteLine($"Depth: {image.Depth}");
-                Console.WriteLine($"Original dimensions: {image.Width}x{image.Height}");
-
-                // Convert to RGB if not already
                 if (image.ColorSpace != ColorSpace.RGB)
                 {
                     image.ColorSpace = ColorSpace.RGB;
                 }
 
-                // Ensure image has an alpha channel and flatten it
                 image.Alpha(AlphaOption.Remove);
-
-                // Adjust image properties
                 image.Format = MagickFormat.Jpg;
-                image.Quality = 90; // Increase quality
+                image.Quality = 90;
 
-                // Resize maintaining aspect ratio
                 var geometry = new MagickGeometry(width)
                 {
                     IgnoreAspectRatio = false
                 };
                 image.Resize(geometry);
-
-                // Optional: Adjust brightness/contrast if needed
-                image.Contrast();    // -100 to 100
-
-                // Save with specific format
+                image.Contrast();
                 image.Write(outputPath);
-
-                // Verify the output file exists and has content
-                if (new FileInfo(outputPath).Length == 0)
-                {
-                    throw new Exception("Output file is empty");
-                }
             }
         }
         catch (Exception ex)
@@ -73,21 +51,6 @@ public static class ImageProcessor
             throw new Exception($"Error processing image: {ex.Message}");
         }
     }
-
-    //public static async Task ProcessImageFromUrlAsync(string url, string outputPath,uint width = 200)
-    //{
-    //    byte[] imageBytes = await DownloadImageFromUrlAsync(url);
-    //    //string p = "C:\\dotnet\\PosPrintServer\\PosPrintServer\\images\\numbers\\5.jpg";
-    //    //byte[] imageBytes = File.ReadAllBytes(p);
-    //    using (MagickImage image = new MagickImage(imageBytes))
-    //    {
-    //        //image.Threshold(new Percentage(70));
-    //        image.Resize(new MagickGeometry(width, 0));
-    //        image.Quality = 60;
-    //        //image.Density = new Density(72, 72);
-    //        image.Write(outputPath, MagickFormat.Jpg);
-    //    }
-    //}
 
     private static async Task<byte[]> DownloadImageFromUrlAsync(string url)
     {
@@ -106,14 +69,6 @@ public static class ImageProcessor
             }
         }
     }
-
-    //private static async Task<byte[]> DownloadImageFromUrlAsync(string url)
-    //{
-    //    using (HttpClient client = new HttpClient())
-    //    {
-    //        return await client.GetByteArrayAsync(url);
-    //    }
-    //}
 
     public static void MergeTwoImages(string imagePath1, string imagePath2, string outputPath)
     {

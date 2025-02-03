@@ -25,13 +25,13 @@ public partial class Receipt
     public double? discount_total { get; set; }
     public bool? is_service_charge { get; set; }
     public ReceiptPayment[] receipt_payments { get; set; } = Array.Empty<ReceiptPayment>();
-    public dynamic[] receipt_promotions { get; set; } = Array.Empty<dynamic>();
-    public dynamic[] receipt_point_promotions { get; set; } = Array.Empty<dynamic>();
+    public ReceiptPromotion[] receipt_promotions { get; set; } = Array.Empty<ReceiptPromotion>();
+    public ReceiptPointPromotion[] receipt_point_promotions { get; set; } = Array.Empty<ReceiptPointPromotion>();
     public string? pos_no { get; set; }
     public string? remark { get; set; }
     public Membership? membership { get; set; }
-    public InVoicePromotion[] invoice_promotions { get; set; } = Array.Empty<InVoicePromotion>();
-    public InVoicePointPromotion[] invoice_point_promotions { get; set; } = Array.Empty<InVoicePointPromotion>();
+    public ReceiptPromotion[] invoice_promotions { get; set; } = Array.Empty<ReceiptPromotion>();
+    public ReceiptPointPromotion[] invoice_point_promotions { get; set; } = Array.Empty<ReceiptPointPromotion>();
 }
 
 public partial class Membership
@@ -59,6 +59,26 @@ public class InVoicePointPromotion
 {
     public double? discount { get; set; }
     public string? point_promotion_name { get; set; }
+}
+
+public class ReceiptPromotion
+{
+    public int id { get; set; }
+    public int receipt_id { get; set; }
+    public int promotion_id { get; set; }
+    public decimal discount { get; set; }
+    public bool read_only { get; set; }
+    public string[] editable_fields { get; set; } = Array.Empty<string>();
+    public string promotion_name { get; set; } = string.Empty;
+}
+
+public class ReceiptPointPromotion
+{
+    public int id { get; set; }
+    public int receipt_id { get; set; }
+    public int point_promotion_id { get; set; }
+    public decimal discount { get; set; }
+    public string point_promotion_name { get; set; } = string.Empty;
 }
 
 namespace Printing

@@ -1,50 +1,28 @@
 using System;
 using Newtonsoft.Json;
 
+public class BillWrapper
+{
+    public BillModel? bill { get; set; }
+    public string? language { get; set; }
+}
+
 public partial class BillModel
 {
     public int? id { get; set; }
     public string? doc_no { get; set; }
-    //public DateTimeOffset? open_date { get; set; }
-    //public string? open_time { get; set; }
-    //public DateTimeOffset? close_date { get; set; }
-    //public string? close_time { get; set; }
-    //public int? bill_type_id { get; set; }
     public int? table_id { get; set; }
-    //public int? incharge_staff_id { get; set; }
-    //public int? customer_id { get; set; }
-    //public double? total_after_vat { get; set; }
-    //public int? delivery_id { get; set; }
-    //public bool? is_diff_delivery { get; set; }
-    //public int? document_status_id { get; set; }
-    //public DateTimeOffset? cancel_date { get; set; }
-    //public string? cancel_time { get; set; }
-    //public int? customer_amount { get; set; }
-    //public double? delivery_diff { get; set; }
-    //public string delivery_diff_unit_name { get; set; }
     public string? remark { get; set; }
-    //public int? tax_customer_id { get; set; }
     public string? table_name { get; set; }
     public string? table_zone_name { get; set; }
     public string? customer_name { get; set; }
-    //public string tax_customer_name { get; set; }
-    //public string bill_type_name { get; set; }
-    //public string document_status_name { get; set; }
     public string? cancel_staff_name { get; set; }
     public string? cashier_staff_name { get; set; }
     public string? delivery_name { get; set; }
-    //public int? bill_type_with_delivery_id { get; set; }
     public bool? is_take_home { get; set; }
-    //public dynamic[] bill_customer_groups { get; set; }
-    //public dynamic[] bill_customer_genders { get; set; }
-    //public dynamic[] bill_customer_ages { get; set; }
-    //public dynamic[] tables { get; set; }
-    //public bool? is_buffet { get; set; }
-    //public bool? buffet_category_has_time_limit { get; set; }
-    //public string? buffet_end_time { get; set; }
     public BillItem[] bill_items { get; set; } = Array.Empty<BillItem>();
     public Receipt[] receipts { get; set; } = Array.Empty<Receipt>();
-    //public InVoice[] invoices { get; set; } = Array.Empty<InVoice>();
+    public Receipt[] invoices { get; set; } = Array.Empty<Receipt>();
     public Shop? shop { get; set; }
     public string? staff_name { get; set; }
     public string? language { get; set; }

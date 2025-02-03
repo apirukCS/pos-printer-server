@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PosPrintServer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f099a6df6bb35e7f5fd0b0f2c1cf7cfe672683f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("PosPrintServer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PosPrintServer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

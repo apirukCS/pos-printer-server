@@ -1,0 +1,86 @@
+[
+  {
+    "Data": {
+      "is_print_price_kitchen_bill_item": true,
+      "language": "th",
+      "kitchen_name": "\u0E04\u0E23\u0E31\u0E27\u0E22\u0E38\u0E42\u0E23\u0E1B",
+      "table_id": 11,
+      "remark": null,
+      "table_name": "5",
+      "table_zone_name": "A",
+      "bill_type_name": "\u0E17\u0E32\u0E19\u0E23\u0E49\u0E32\u0E19",
+      "delivery_name": null,
+      "is_take_home": false,
+      "bill_items": [
+        {
+          "amount": 1,
+          "unit_price": 0,
+          "price": 0,
+          "note": null,
+          "is_take_home": false,
+          "unit_price_item": null,
+          "barcode": "8852698014735",
+          "product_name": "\u0E40\u0E01\u0E35\u0E4B\u0E22\u0E27\u0E0B\u0E48\u0E32\u0E0A\u0E35\u0E2A",
+          "product_item_code": "\u0E40\u0E01\u0E35\u0E4B\u0E22\u0E27\u0E0B\u0E48\u0E32\u0E0A\u0E35\u0E2A",
+          "receipt_id": null,
+          "invoice_id": null,
+          "product_is_has_option": false,
+          "bill_item_product_toppings": [],
+          "bill_item_notes": [],
+          "description": null,
+          "notices": [],
+          "product_has_option": null
+        }
+      ],
+      "is_delivery": null,
+      "buffet_text": "",
+      "orderer_name": "admin",
+      "bill_no": "B680109000039",
+      "is_print_barcode": true
+    },
+    "Timestamp": "2025-01-10T16:32:27.6032022\u002B07:00",
+    "PrintingType": "Kitchen"
+  },
+  {
+    "Data": {
+      "is_print_price_kitchen_bill_item": true,
+      "language": "th",
+      "kitchen_name": "\u0E04\u0E23\u0E31\u0E27\u0E0D\u0E35\u0E48\u0E1B\u0E38\u0E48\u0E19",
+      "table_id": 11,
+      "remark": null,
+      "table_name": "5",
+      "table_zone_name": "A",
+      "bill_type_name": "\u0E17\u0E32\u0E19\u0E23\u0E49\u0E32\u0E19",
+      "delivery_name": null,
+      "is_take_home": false,
+      "bill_items": [
+        {
+          "amount": 1,
+          "unit_price": 0,
+          "price": 0,
+          "note": null,
+          "is_take_home": false,
+          "unit_price_item": null,
+          "barcode": "8859702431658",
+          "product_name": "\u0E02\u0E49\u0E32\u0E27\u0E44\u0E01\u0E48\u0E04\u0E32\u0E23\u0E32\u0E40\u0E01\u0E30\u0E41\u0E01\u0E07\u0E01\u0E30\u0E2B\u0E23\u0E35\u0E48",
+          "product_item_code": "\u0E02\u0E49\u0E32\u0E27\u0E44\u0E01\u0E48\u0E04\u0E32\u0E23\u0E32\u0E40\u0E01\u0E30\u0E41\u0E01\u0E07\u0E01\u0E30\u0E2B\u0E23\u0E35\u0E48",
+          "receipt_id": null,
+          "invoice_id": null,
+          "product_is_has_option": false,
+          "bill_item_product_toppings": [],
+          "bill_item_notes": [],
+          "description": null,
+          "notices": [],
+          "product_has_option": null
+        }
+      ],
+      "is_delivery": null,
+      "buffet_text": "",
+      "orderer_name": "admin",
+      "bill_no": "B680109000039",
+      "is_print_barcode": true
+    },
+    "Timestamp": "2025-01-10T16:35:07.5608674+07:00",
+    "PrintingType": "Kitchen"
+  }
+]

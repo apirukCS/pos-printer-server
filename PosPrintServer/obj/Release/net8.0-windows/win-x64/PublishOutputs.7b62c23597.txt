@@ -1,0 +1,14 @@
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.exe
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.deps.json
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.runtimeconfig.json
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.dll.config
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\PosPrintServer.pdb
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\Magick.NET-Q8-AnyCPU.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\Magick.NET.Core.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\Newtonsoft.Json.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\SocketIO.Core.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\SocketIO.Serializer.Core.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\SocketIO.Serializer.SystemTextJson.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\SocketIOClient.dll
+C:\dotnet\PosPrintServer\PosPrintServer\bin\Release\net8.0-windows\win-x64\publish\Magick.Native-Q8-x64.dll

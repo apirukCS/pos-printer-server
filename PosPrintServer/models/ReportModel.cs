@@ -22,21 +22,21 @@ public partial class ReceiptPaymentCreditCard
     public int? bank_id { get; set; }
     public string? bank_name { get; set; }
     public string? bank_short_name { get; set; }
-    public decimal? amount { get; set; }
+    public string? amount { get; set; }
     public int? payment_count { get; set; }
 }
 
 public partial class Delivery
 {
-	public string? name { get; set; }
-	public double? price { get; set; }
+	public string? delivery_name { get; set; }
+	public string? total { get; set; }
 }
 
 public partial class ProductType
 {
 	public string? product_type_name { get; set; }
 	public double? amount { get; set; }
-	public double? price { get; set; }
+	public dynamic? price { get; set; }
 	public string? product_name { get; set; }
 }
 
@@ -64,6 +64,9 @@ public partial class ReportShop
     public string? branch { get; set; } // Matches JSON key
     public string? address { get; set; }
     public bool? is_show_report_by_menu { get; set; }
+
+    public string? branch_name { get; set; }
+    public double? service_charge { get; set; }
 }
 
 
@@ -71,15 +74,15 @@ public partial class ReportShop
 public partial class Promotion
 {
     public string? promotion_name { get; set; }
-    public double? discount { get; set; }
-    public int? cnt { get; set; }
+    public string? discount { get; set; }
+    public string? cnt { get; set; }
 }
 
 public partial class PointPromotion
 {
     public string? point_promotion_name { get; set; }
-    public double? discount { get; set; }
-    public int? cnt { get; set; }
+    public string? discount { get; set; }
+    public string? cnt { get; set; }
 }
 
 public class PosCashMovement
@@ -97,13 +100,6 @@ public class Destination
 
 public partial class PosRound
 {
-    //public string? pos_name { get; set; }
-    //public string? open_date { get; set; }
-    //public string? close_date { get; set; }
-    //public string? open_time { get; set; }
-    //public string? close_time { get; set; }
-    //public double? round { get; set; }
-
     public int? id { get; set; }
     public int? pos_id { get; set; }
     public int? open_staff_id { get; set; }
@@ -118,7 +114,7 @@ public partial class PosRound
 
     public string? created_at { get; set; }
     public string? updated_at { get; set; }
-    public double? bank_deposit_slip { get; set; }
+    public dynamic? bank_deposit_slip { get; set; }
 
     public string? open_date { get; set; }
     public string? close_date { get; set; }
@@ -143,12 +139,10 @@ public partial class PosRound
 
 public partial class Report
 {
-    public List<ProductType> product_types { get; set; } = new List<ProductType>();
+    public List<ProductType> product_types { get; set; } = new List<ProductType>(); //
     public List<ReceiptPaymentQrCode> receipt_payment_qr_code { get; set; } = new List<ReceiptPaymentQrCode>();
     public List<ReceiptPaymentCreditCard> receipt_payment_credit_card { get; set; } = new List<ReceiptPaymentCreditCard>();
     public List<Delivery> deliveries { get; set; } = new List<Delivery>();
-    //public List<string>? receipt_payment_qr_code { get; set; } = new List<string>();
-    //public List<string>? receipt_payment_credit_card { get; set; } = new List<string>();
     public List<Promotion> promotions { get; set; } = new List<Promotion>();
     public List<PointPromotion> point_promotions { get; set; } = new List<PointPromotion>();
     public ReportShop? shop { get; set; }
@@ -178,7 +172,7 @@ public partial class Report
     public double? pos_round_close_tip_amount { get; set; }
     public double? receipt_restuarant { get; set; }
     public double? receipt_take_home { get; set; }
-    public double? est_total_after_vat { get; set; }
+    public string? est_total_after_vat { get; set; }
     public double? count_bill_status89 { get; set; }
     public string? language { get; set; }
 }
