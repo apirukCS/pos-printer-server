@@ -8,6 +8,7 @@ public partial class Shop
     //public string name_en { get; set; }
     public string? tel { get; set; }
     public string? tax_no { get; set; }
+    public string? bill_footer_image_url { get; set; }
     //public string address { get; set; }
     //public int? province_id { get; set; }
     //public int? amphur_id { get; set; }

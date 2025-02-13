@@ -25,18 +25,19 @@ public class PrintBill
     {
         List<BillModel> bills = ParseData(bill);
         for (int i = 0; i< bills.Count; i++) {
+            bool isDisconnectPrinter = i == (bills.Count - 1);
             if (type == "bill")
             {
-                await PrintingBill(ptr, bills[i], type);
+                await PrintingBill(ptr, bills[i], type, isDisconnectPrinter);
             }
             else 
             {
-                await PrintingReceipt(ptr, bills[i], type, cashdraw);
+                await PrintingReceipt(ptr, bills[i], type, cashdraw, isDisconnectPrinter);
             }
         }
     }
 
-    public async Task PrintingBill(IntPtr printer, BillModel bill, string type)
+    public async Task PrintingBill(IntPtr printer, BillModel bill, string type, bool disConnectPrinter)
     {
         try {
             bool[] s = new bool[7];
@@ -50,25 +51,31 @@ public class PrintBill
                 s[3] = AddBillItems(printer, bill);
                 s[4] = AddPricing(printer, bill, type);
                 s[5] = AddMembership(printer, bill);
-                s[6] = await AddFooterBill(printer, bill);
+                s[6] = await AddFooterBill(printer, bill, type);
                 PM.CutPaper(printer);
-                PM.ClosePort(printer);
-                PM.ReleasePort(printer);
+                if (disConnectPrinter) {
+                    PM.ClosePort(printer);
+                    PM.ReleasePort(printer);
+                    await Task.Delay(100);
+                }
+
                 if (s.Any(x => x == false)) {
+                    Console.WriteLine($"some value is false {string.Join(", ", s)}");
                     WriteLog.WriteFailedPrintLog(bill, type);
                 }
-                await Task.Delay(100);
-            //});
         }
         catch (Exception e) {
             //keep log
             //PM.ClosePort(printer);
             //MessageBox.Show($"{e}");
+            PM.ClosePort(printer);
+            PM.ReleasePort(printer);
+            Console.WriteLine($"exx {e.ToString()}");
             WriteLog.WriteFailedPrintLog(bill, type);
         }
     }
 
-    public async Task PrintingReceipt(IntPtr printer, BillModel bill, string type, bool cashdraw)
+    public async Task PrintingReceipt(IntPtr printer, BillModel bill, string type, bool cashdraw, bool disConnectPrinter)
     {
         try {
             bool[] s = new bool[9];
@@ -87,24 +94,28 @@ public class PrintBill
                 s[5] = AddPricing(printer, bill, type);
                 s[6] = AddPayments(printer, bill);
                 s[7] = AddMembership(printer, bill);
-                s[8] = await AddFooterBill(printer, bill);
+                s[8] = await AddFooterBill(printer, bill, type);
                 PM.CutPaper(printer);
-                PM.ClosePort(printer);
-                PM.ReleasePort(printer);
+
+                if (disConnectPrinter)
+                {   
+                    PM.ClosePort(printer);
+                    PM.ReleasePort(printer);
+                    await Task.Delay(100);
+                }
+
                 if (s.Any(x => x == false))
                 {
-                    WriteLog.WriteFailedPrintLog(bill, type);
-                //WriteLog.Write(type, type);
-
-            }
-                await Task.Delay(100);
-            //}); 
+                Console.WriteLine($"some---- value is false {string.Join(", ", s)}");
+                WriteLog.WriteFailedPrintLog(bill, type);
+                }
         }
         catch (Exception e) {
             PM.ClosePort(printer);
             PM.ReleasePort(printer);
             //keep log
             //MessageBox.Show($"rer {e}");
+            Console.WriteLine($"exx--=-= {e.ToString()}");
 
             WriteLog.WriteFailedPrintLog(bill, type);
             //WriteLog.Write(type, type);
@@ -113,7 +124,7 @@ public class PrintBill
 
     static async Task<bool> AddLogo(IntPtr printer, BillModel bill)
     {
-        if (!string.IsNullOrEmpty(bill.shop.image_url)) {
+        if (!string.IsNullOrEmpty(bill.shop?.image_url)) {
             int s = await PM.PrintImageUrl(printer, bill.shop.image_url, "image.jpg");
             PM.NewLine(printer, 70);
             return s == 0;
@@ -153,13 +164,13 @@ public class PrintBill
         }
 
         string staffName = $"{(language == "th" ? "พนักงาน" : "staff")} {bill.staff_name ?? bill.cashier_staff_name}";
-        string textLeftFiltered = Regex.Replace(loc, "[\u0E31\u0E34-\u0E3A\u0E47-\u0E4D]", "");
-        int effectiveLeftLength = textLeftFiltered.Length;
+        //string textLeftFiltered = Regex.Replace(loc, "[\u0E31\u0E34-\u0E3A\u0E47-\u0E4D]", "");
+        //int effectiveLeftLength = textLeftFiltered.Length;
 
-        int spaceBetween = 42 - (effectiveLeftLength + staffName.Length);
-        string line = loc + new string(' ', spaceBetween) + staffName;
-        int s = PM.PrintTextBold(printer, loc + new string(' ', spaceBetween), false);
-        int s2 = PM.PrintTextOnly(printer, staffName);
+        //int spaceBetween = 42 - (effectiveLeftLength + staffName.Length);
+        //string line = loc + new string(' ', spaceBetween) + staffName;
+        int s = PM.PrintTextBold(printer, loc, false);
+        
         PM.NewLine(printer);
 
         string date = language == "th" ? "วันที่" : "Order time";
@@ -169,7 +180,9 @@ public class PrintBill
 
         string generalCustomer = language == "th" ? "ลูกค้าทั่วไป" : "General Customer";
         string customer = $"{(language == "th" ? "ลูกค้า" : "Customer name")} {(bill.customer_name == "ลูกค้าทั่วไป" ? generalCustomer : bill.customer_name)}";
-        int s4 = PM.PrintText(printer, customer, true, 120);
+        int s4 = PM.PrintText(printer, customer, true);
+        int s2 = PM.PrintText(printer, staffName,lineSpace: 120);
+        //PM.NewLine(printer);
 
         string headerA = language == "th" ? "รายการที่สั่ง" : "Item";
         int s5 = PM.PrintText(printer, headerA);
@@ -197,20 +210,18 @@ public class PrintBill
                 itemName += $" {billItem.product_item_code}";
             }
 
-            string itemPrice = bill.shop.bill_is_show_topping_by_item == true ?
+            string itemPrice = bill.shop?.bill_is_show_topping_by_item == true ?
                 (billItem.unit_price_item * billItem.amount).ToString() :
                 billItem.price.ToString();
             itemPrice = CurrencyFormat(itemPrice);
 
             s = PM.PrintTextThreeColumn(printer, amount, itemName, itemPrice);
 
-
             if (billItem.bill_item_notes != null && billItem.bill_item_notes.Length > 0)
             {
                 string wholeNote = $"({string.Join(", ", billItem.bill_item_notes.Select(n => n.note_note))})";
                 s2 =  PM.PrintTextThreeColumn(printer, "       ", wholeNote, "     ");
             }
-
 
             if (billItem.bill_item_product_toppings != null && billItem.bill_item_product_toppings.Length > 0)
             {
@@ -224,7 +235,7 @@ public class PrintBill
             }
         }
         PM.NewLine(printer);
-        return s == 0 && s2 == 0 && 23 == 0;
+        return s == 0 && s2 == 0 && s3 == 0;
     }
 
     static bool AddPricing(IntPtr printer, BillModel bill, string type)
@@ -361,20 +372,38 @@ public class PrintBill
         return s.All(x => x == 0);
     }
 
-    public async Task<bool> AddFooterBill(IntPtr printer, BillModel bill)
+    public async Task<bool> AddFooterBill(IntPtr printer, BillModel bill,string type)
     {
         int[] s = new int[3];
-        if (bill.shop != null && bill.shop.receipt_footer_image_url != null)
+        if (type == "receipt")
         {
-            string imageUrl = bill.shop.receipt_footer_image_url ?? "";
-            if (!string.IsNullOrEmpty(imageUrl)) {
-                PM.AlignCenter(printer);
-                s[0] = await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
-                PM.TextAlignLeft(printer);
+            if (bill.shop != null && !string.IsNullOrEmpty(bill.shop.receipt_footer_image_url))
+            {
+                //bill_footer_image_url
+                string imageUrl = bill.shop.receipt_footer_image_url ?? "";
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    PM.AlignCenter(printer);
+                    s[0] = await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+                    PM.TextAlignLeft(printer);
+                }
+
             }
-            
         }
-        if (bill.shop != null && bill.shop.bill_footer_text != null)
+        else {
+            if (bill.shop != null && !string.IsNullOrEmpty(bill.shop.bill_footer_image_url))
+            {
+                //bill_footer_image_url
+                string imageUrl = bill.shop.bill_footer_image_url ?? "";
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    PM.AlignCenter(printer);
+                    s[0] = await PM.PrintImageUrl(printer, imageUrl, "logo.jpg");
+                    PM.TextAlignLeft(printer);
+                }
+            }
+        }
+        if (bill.shop != null && !string.IsNullOrEmpty(bill.shop.bill_footer_text))
         {
             foreach (var txt in bill.shop.bill_footer_text.Split(new[] { "\n" }, StringSplitOptions.None))
             {
@@ -528,6 +557,7 @@ public class PrintBill
             string changeK = language == "th" ? "เงินทอน" : "Change";
             s[1] = PM.PrintTextTwoColumn(printer, changeK, changeAmount, 2);
         }
+        PM.NewLine(printer);
 
         return s.All(x => x == 0);
     }
@@ -629,26 +659,6 @@ public class PrintBill
             {
                 prop.SetValue(destination, value);
             }
-        }
-    }
-
-    static void WriteFile(string jsonString)
-    {
-        string folderPath = @"C:\pos-printer";
-        string filePath = Path.Combine(folderPath, "logs.txt");
-        try
-        {
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-
-            File.WriteAllText(filePath, jsonString);
-            //MessageBox.Show($"JSON has been written to: {filePath}");
-        }
-        catch (Exception ex)
-        {
-            //MessageBox.Show($"Error writing to file: {ex.Message}");
         }
     }
 }

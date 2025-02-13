@@ -36,12 +36,12 @@ public class PrintQRCode
             //{
             DateTimeHelper dateTimeHelper = new DateTimeHelper();
 
-            string imageUrl = q.Shop.ImageUrl;
-            string qrcode = q.QrCode;
-            string table = $"{q.Bill.TableZoneName} {q.Bill.TableName}";
+            string imageUrl = q.Shop?.ImageUrl ?? "";
+            string qrcode = q.QrCode ?? "";
+            string table = $"{q.Bill?.TableZoneName} {q.Bill?.TableName}";
             string qrScan = q.Language == "th" ? "QR code เพื่อสแกนสั่งอาหาร" : "QR code for scan to order";
             string currentDate = dateTimeHelper.GetCurrentDate(q.Language ?? "th", true);
-            var times = q.Bill.OpenTime != null ? q.Bill.OpenTime.Split(':') : [];
+            var times = q.Bill?.OpenTime != null ? q.Bill?.OpenTime.Split(':') : [];
             string time = times.Length > 0 ? q.Language == "th"
                 ? $"เวลาเริ่ม: {times[0]}:{times[1]}น."
                 : $"Start time: {times[0]}:{times[1]}" : "";

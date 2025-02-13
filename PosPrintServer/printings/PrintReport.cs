@@ -31,7 +31,7 @@ public class PrintReport
     public async Task ExecutePrintReport(IntPtr printer, Report reportBill)
     {
         try {
-            bool[] s = new bool[10];
+            bool[] s = new bool[8];
             //await Task.Run(async () =>
             //{
                 PM.AlignCenter(printer);
@@ -54,6 +54,7 @@ public class PrintReport
                 PM.ReleasePort(printer);
                 if (s.Any(x => x == false))
                 {
+                Console.WriteLine($"some value report is false: {string.Join(", ", s)}");
                     WriteLog.WriteFailedPrintLog(reportBill, "report");
                 }
                 await Task.Delay(100);
@@ -62,6 +63,7 @@ public class PrintReport
         catch (Exception e) {
             PM.ClosePort(printer);
             PM.ReleasePort(printer);
+            Console.WriteLine($"report error: {e}");
             WriteLog.WriteFailedPrintLog(reportBill, "report");
             //MessageBox.Show($"{e}");
         }
@@ -119,14 +121,14 @@ public class PrintReport
 
             // Starting Date and Time
             string startingDate = $"{(reportBill.language == "th" ? "วันที่เปิดลิ้นชักเงินสด" : "Starting date")} " +
-                                  $"{DateTime.Parse(reportBill.pos_round.open_date).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo(language))} " +
-                                  $"{(reportBill.language == "th" ? "เวลา" : "time")} {reportBill.pos_round.open_time}";
+                                  $"{DateTime.Parse(reportBill.pos_round?.open_date).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo(language))} " +
+                                  $"{(reportBill.language == "th" ? "เวลา" : "time")} {reportBill.pos_round?.open_time}";
             s[2] = PM.PrintText(printer, startingDate);
 
             // Ending Date and Time
             string endingDate = $"{(reportBill.language == "th" ? "วันที่ปิดลิ้นชักเงินสด" : "Ending date")} " +
-                                $"{DateTime.Parse(reportBill.pos_round.close_date).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo(language))} " +
-                                $"{(reportBill.language == "th" ? "เวลา" : "time")} {reportBill.pos_round.close_time}";
+                                $"{DateTime.Parse(reportBill.pos_round?.close_date).ToString("dd MMMM yyyy", new System.Globalization.CultureInfo(language))} " +
+                                $"{(reportBill.language == "th" ? "เวลา" : "time")} {reportBill.pos_round?.close_time}";
             s[3] = PM.PrintText(printer, endingDate);
         }
         else
@@ -421,7 +423,7 @@ public class PrintReport
             foreach (var type in reportBill.product_types)
             {
                 // Ensure is_show_report_by_menu is a non-nullable bool
-                bool isShowReportByMenu = reportBill.shop.is_show_report_by_menu ?? false;
+                bool isShowReportByMenu = reportBill.shop?.is_show_report_by_menu ?? false;
 
                 string key = isShowReportByMenu
                     ? type.product_name
@@ -478,7 +480,7 @@ public class PrintReport
                 }
             }
 
-            bool isShowReportByMenuFinal = reportBill.shop.is_show_report_by_menu ?? false;
+            bool isShowReportByMenuFinal = reportBill.shop?.is_show_report_by_menu ?? false;
 
             if (isShowReportByMenuFinal && sumAmount > 0)
             {

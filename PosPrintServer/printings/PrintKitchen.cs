@@ -25,7 +25,8 @@ public class PrintKitchen
     private async Task InitializePrinting(IntPtr ptr, dynamic data)
     {
         string jsonString = JsonSerializer.Serialize(data);
-        KitchenModel model = JsonSerializer.Deserialize<KitchenModel>(jsonString);
+        KitchenModel? model = JsonSerializer.Deserialize<KitchenModel>(jsonString);
+        if (model == null) return;
         await Print(ptr, model);
     }
 
@@ -335,10 +336,9 @@ public class PrintKitchen
     }
 
     static string AmountFormatter(double amount) {
-        //return amount.ToString("0.###", CultureInfo.InvariantCulture);
         if (amount % 1 == 0)
-            return ((int)amount).ToString(CultureInfo.InvariantCulture); // ลบ .00
+            return ((int)amount).ToString("N0", CultureInfo.InvariantCulture); // แสดง comma สำหรับจำนวนเต็ม
         else
-            return amount.ToString("0.###", CultureInfo.InvariantCulture);
+            return amount.ToString("N2", CultureInfo.InvariantCulture);
     }
 }

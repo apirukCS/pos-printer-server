@@ -19,35 +19,38 @@ namespace PosPrintServer
         private static Dictionary<string, IntPtr> printerConnections = new Dictionary<string, IntPtr>();
         public static List<(string IpAddress, IntPtr Printer)> printers = new List<(string, IntPtr)>();
         private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        public static bool isPrinting = false;
+        public static bool isCheckingStatus = false;
 
         public Form1()
         {
             InitializeComponent();
-            GenerateNumber.create();
+            //GenerateNumber.create();
 
             textBox1.Text = Properties.Settings.Default.Domain;
             textBox2.Text = Properties.Settings.Default.Token;
             if (string.IsNullOrEmpty(Properties.Settings.Default.Domain) || string.IsNullOrEmpty(Properties.Settings.Default.Token))
             {
-                MessageBox.Show("กรุณาตั้งค่า Shop Domain และ Access Token!");
+                this.Shown += Form1_Shown;
             }
             else {
                 GetPrinters();
                 ConnectSocket();
             }
         }
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            MessageBox.Show("กรุณาตั้งค่า Shop Domain และ Access Token!");
+        }
 
-
-
-        private async void GetPrinters()
+        private async Task GetPrinters()
         {
             var res = await PrinterAPI.GetPrinters($"https://{Properties.Settings.Default.Domain}.resrun-pos.com/rails-api//printers", WSToken());
-            DisplayPrinters(res);
+            await DisplayPrinters(res);
         }
 
         static async void ConnectSocket()
         {
-            //MessageBox.Show("call connect socket");
             var serverUrl = $"wss://{Properties.Settings.Default.Domain}.resrun-pos.com";
             var options = new SocketIOOptions
             {
@@ -65,6 +68,7 @@ namespace PosPrintServer
             socket.OnConnected += (sender, e) =>
             {
                 //MessageBox.Show("connected");
+                //isConnectedSocket = true;
             };
 
             socket.OnError += (sender, e) =>
@@ -151,7 +155,6 @@ namespace PosPrintServer
                         var existingGroup = groupedDataStore.FirstOrDefault(g => g.IpAddress == group.Key);
                         if (existingGroup != null)
                         {
-                            //existingGroup.JsonDataList.AddRange(group.Select(item => item.jsonData));
                             foreach (var item in group)
                             {
                                 if (isFirstQueue)
@@ -197,18 +200,6 @@ namespace PosPrintServer
         {
             var qrCode = await PrintQRCode.Create(ptr, item);
             GC.KeepAlive(qrCode);
-            //await Task.CompletedTask;
-
-            //await _semaphore.WaitAsync();
-            //try
-            //{
-            //    var printer = await PrintQRCode.Create(ptr, item);
-            //    GC.KeepAlive(printer);
-            //}
-            //finally
-            //{
-            //    _semaphore.Release();
-            //}
         }
 
         static async Task PrebillPrint(IntPtr ptr, BillModel item)
@@ -249,7 +240,7 @@ namespace PosPrintServer
             GetPrinters();
         }
 
-        private async void DisplayPrinters(List<PrinterModel>? data)
+        private async Task DisplayPrinters(List<PrinterModel>? data)
         {
             label1.Font = new Font("Arial", 11);
             label1.Text = "";
@@ -288,10 +279,9 @@ namespace PosPrintServer
             {
                 isPrintingInProgress = true;
 
-                printTimer = new System.Timers.Timer(20);
+                printTimer = new System.Timers.Timer(200);
                 printTimer.Elapsed += async (sender, e) =>
                 {
-                    // Prevent overlapping executions
                     printTimer.Stop();
 
                     try
@@ -316,12 +306,17 @@ namespace PosPrintServer
                             for (int i = 0; i < dataToPrint.Count; i++)
                             {
                                 Console.WriteLine($"Printing... {i}");
-                                string res = await PrintDataAsync(dataToPrint[i].IpAddress, dataToPrint[i].JsonData); // Wait for the process to complete
+                                while (isCheckingStatus)
+                                {
+                                    await Task.Delay(300);
+                                }
+                                isPrinting = true;
+                                string res = await PrintDataAsync(dataToPrint[i].IpAddress, dataToPrint[i].JsonData);
+                                isPrinting = false;
                                 Console.WriteLine($"Printed: {res}");
                             }
                         }
 
-                        // Stop the timer if there's no more data to process
                         if (!groupedDataStore.Any(group => group.JsonDataList.Any()))
                         {
                             printTimer.Dispose();
@@ -334,7 +329,6 @@ namespace PosPrintServer
                     }
                     finally
                     {
-                        // Restart the timer if there is still data to process
                         if (isPrintingInProgress)
                         {
                             printTimer.Start();
@@ -391,6 +385,7 @@ namespace PosPrintServer
 
                 if (s != 0)
                 {
+                    PM.ClosePort(ptr);
                     AddToGroupedDataStore(ipAddress, jsonData);
                     return "AddToGroupedDataStore";
                 }
@@ -414,40 +409,36 @@ namespace PosPrintServer
 
                 if (printingType == "kitchen") {
                     Console.WriteLine("printing== KitchenPrint");
-                    await KitchenPrint(ptr, item); //
-
-                    Console.WriteLine("printed-- KitchenPrint");
+                    await KitchenPrint(ptr, item);
                     return "kitchen";
                 }
                 else if (printingType == "qr-code") {
-                    Console.WriteLine("printing== QrCodePrint");
                     var qr = JsonSerializer.Deserialize<QrCodeModel>(jsonString, options);
-                    await QrCodePrint(ptr, qr); //
-                    Console.WriteLine("printed-- QrCodePrint");
+                    await QrCodePrint(ptr, qr);
                     return "qr-code";
                 } else if (printingType == "pre-bill") {
                     BillWrapper? bill = JsonSerializer.Deserialize<BillWrapper>(jsonString);
                     bill.bill.language = bill.language;
-                    await PrebillPrint(ptr, bill.bill); //
+                    await PrebillPrint(ptr, bill.bill);
                     return "prebill";
-                    //break;
                 }
                 else if (printingType == "queues")
                 {
                     var queue = JsonSerializer.Deserialize<QueueModel>(jsonString, options);
-                    await QueuePrint(ptr, queue); //
+                    await QueuePrint(ptr, queue);
                     return "queue";
                 }
                 else if (printingType == "receipt")
                 {
                     BillWrapper bill = JsonSerializer.Deserialize<BillWrapper>(jsonString);
                     bill.bill.language = bill.language;
-                    await ReceiptPrint(ptr, bill.bill, cashdraw); //
+                    await ReceiptPrint(ptr, bill.bill, cashdraw);
                     return "receipt";
                 }
                 else if (printingType == "invoice") {
                     BillWrapper bill = JsonSerializer.Deserialize<BillWrapper>(jsonString);
-                    await InvoicePrint(ptr, bill.bill); //
+                    bill.bill.language = bill.language;
+                    await InvoicePrint(ptr, bill.bill);
                 }
                 else if (printingType == "sales_reports-daily_summary") {
                     try
@@ -478,7 +469,9 @@ namespace PosPrintServer
 
                         var modifiedJson = JsonSerializer.Serialize(jsonObject, options);
                         var report = JsonSerializer.Deserialize<Report>(modifiedJson, options);
-                        await SalesReportsDailySummaryPrint(ptr, report);
+                        if (report != null) {
+                            await SalesReportsDailySummaryPrint(ptr, report!);
+                        }
                         return "sales_reports-daily_summary";
                     }
                     catch (Exception ex)
@@ -489,7 +482,6 @@ namespace PosPrintServer
                     }
                 }
 
-                Console.WriteLine("complete in form1--");
                 return "--";
             }
             catch (Exception e)
@@ -503,17 +495,25 @@ namespace PosPrintServer
         private void button2_Click(object sender, EventArgs e)
         {
             Properties.Settings.Default.Domain = textBox1.Text;
-            Properties.Settings.Default.Token = textBox2.Text;
+            Properties.Settings.Default.Token = textBox2.Text.Trim().Replace("\n","").Replace("\r","");
             Properties.Settings.Default.Save();
             ConnectSocket();
 
             MessageBox.Show($"Settings saved!");
         }
 
-        private void button1_Click_1(object sender, EventArgs e)
+        private async void button1_Click_1(object sender, EventArgs e)
         {
-            GetPrinters();
-            ConnectSocket();
+            if (isCheckingStatus) return;
+            isCheckingStatus = true;
+            button1.Enabled = false;
+            while (isPrinting)
+            {
+                await Task.Delay(300);
+            }
+            await GetPrinters();
+            isCheckingStatus = false;
+            button1.Enabled = true;
         }
     }
 }

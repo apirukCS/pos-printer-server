@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 using PrintingModel;
 
+using System.IO;
+using System.Reflection;
+
 public class PrinterManager
 {
     private static ConcurrentDictionary<string, IntPtr> connectedPrinters = new ConcurrentDictionary<string, IntPtr>();
@@ -309,8 +312,15 @@ public class PrinterManager
 
     public static int PrintQueueNumber(IntPtr printer, int number)
     {
-        string folderPath = @"C:\pos-printer-server\numbers\";
-        try {
+        string basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (string.IsNullOrEmpty(basePath))
+        {
+            basePath = Directory.GetCurrentDirectory();
+        }
+        string folderPath = Path.Combine(basePath, "images", "numbers");
+
+        try
+        {
             string path;
             if (number < 10)
             {
